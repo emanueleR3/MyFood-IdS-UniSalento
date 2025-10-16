@@ -5,35 +5,42 @@ import it.unisalento.myfood.Business.Security.AbstractFactory.StrategyFactory;
 import it.unisalento.myfood.Business.Security.Strategy.PasswordHashingContext;
 import it.unisalento.myfood.Business.Security.Strategy.SHA512Hashing;
 import it.unisalento.myfood.Business.UtenteBusiness;
-import it.unisalento.myfood.DAO.IUtenteDAO;
-import it.unisalento.myfood.DAO.UtenteDAO;
+import it.unisalento.myfood.DAO.*;
+import it.unisalento.myfood.model.Carrello;
+import it.unisalento.myfood.model.Composite.CommentoCliente;
 import it.unisalento.myfood.model.Composite.IInterazioneUtente;
+import it.unisalento.myfood.model.Composite.Prodotto;
 import it.unisalento.myfood.model.Ordine;
+import it.unisalento.myfood.model.TipologiaProdotto;
 import it.unisalento.myfood.model.Utente;
 import org.junit.*;
 
-
 import java.sql.Date;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 
- public class UtenteDAOTest {
-     private final IUtenteDAO IDAO = UtenteDAO.getInstance();
+public class UtenteDAOTest {
+
+    private final IUtenteDAO UDAO = UtenteDAO.getInstance();
+
     @Before
     public void setUp(){
         UtenteBusiness utenteBusiness = UtenteBusiness.getInstance();
 
         try {
-            utenteBusiness.signUpCliente("valentino@gmail.com" ,"Valentino", "Rossi", "1234567890", "1975-2-2", "Pilota", "Via Verdi 22, Milano");
+            utenteBusiness.signUpCliente("valentino@gmail.com" ,"Valentino", "Rossi", "1234567890", "02-02-1975", "Pilota", "Via Verdi 22, Milano", true);
         } catch (InvalidFormatException e) {
             e.printStackTrace();
         }
         try {
-            utenteBusiness.signUpAmministratore("mario@gmail.com" ,"Mario", "Bianchi", "1234567890", "1975-2-2", "Pilota");
+            utenteBusiness.signUpAmministratore("mario@gmail.com" ,"Mario", "Bianchi", "1234567890", "02-02-1975", "Pilota", true);
         } catch (InvalidFormatException e) {
             e.printStackTrace();
         }
         try {
-            utenteBusiness.signUpCucina("vittorio@gmail.com" ,"Vittorio", "Veneto", "1234567890", "1975-2-2", "Pilota");
+            utenteBusiness.signUpCucina("vittorio@gmail.com" ,"Vittorio", "Veneto", "1234567890", "02-02-1975", "Pilota", true);
         } catch (InvalidFormatException e) {
             e.printStackTrace();
         }
@@ -41,86 +48,75 @@ import java.util.ArrayList;
 
     @After
     public void tearDown(){
-        IDAO.removeByEmail("mario@gmail.com");
-        IDAO.removeByEmail("valentino@gmail.com");
-        IDAO.removeByEmail("vittorio@gmail.com");
+        UDAO.removeByEmail("mario@gmail.com");
+        UDAO.removeByEmail("valentino@gmail.com");
+        UDAO.removeByEmail("vittorio@gmail.com");
     }
 
     @Test
     public void getLastInsertIdTest() {
         UtenteBusiness utenteBusiness = UtenteBusiness.getInstance();
         try {
-            utenteBusiness.signUpCliente("emanuele@gmail.com" ,"Emanuele", "Romano", "1234567890", "1975-2-2", "Pilota", "Via Verdi 22, Milano");
+            utenteBusiness.signUpCliente("emanuele@gmail.com" ,"Emanuele", "Romano", "1234567890", "02-02-1975", "Pilota", "Via Verdi 22, Milano", true);
         } catch (InvalidFormatException e) {
             e.printStackTrace();
         }
 
-        Utente utente = IDAO.findByEmail("emanuele@gmail.com");
+        Utente utente = UDAO.findByEmail("emanuele@gmail.com");
 
-        Assert.assertEquals(utente.getId(), IDAO.getLastInsertId());
+        Assert.assertEquals(utente.getId(), UDAO.getLastInsertId());
 
-        IDAO.removeByEmail("emanuele@gmail.com");
+        UDAO.removeByEmail("emanuele@gmail.com");
     }
 
     @Test
-    public void addTest() {
-        ArrayList<Ordine> ordini = new ArrayList<>();
-        ArrayList<IInterazioneUtente> interazioni = new ArrayList<>();
-        boolean result = IDAO.addUtente(new Utente("Emanuele" ,"Romano", "emanuele@gmail.com", "1234", Utente.RUOLO.CLIENTE, Date.valueOf("2003-02-02") ,"1234567890", Date.valueOf("2023-12-12"), false, false, "Via Verdi 22, Lecce", "studente", ordini, interazioni, SHA512Hashing.generateSalt()));
+    public void addTest() throws InvalidFormatException {
+        UtenteBusiness.getInstance().signUpCliente("emanuele@gmail.com" ,"Emanuele", "Romano", "1234567890", "02-02-1975", "Pilota", "Via Verdi 22, Milano", true);
 
-        Utente utente = IDAO.findByEmail("emanuele@gmail.com");
-        System.out.println(utente);
+        Utente utente = UDAO.findByEmail("emanuele@gmail.com");
 
-        Assert.assertTrue(result);
-        Assert.assertEquals(IDAO.getLastInsertId(), utente.getId());
+        Assert.assertEquals(UDAO.getLastInsertId(), utente.getId());
         Assert.assertEquals("Emanuele", utente.getNome());
         Assert.assertEquals("Romano", utente.getCognome());
         Assert.assertEquals("emanuele@gmail.com", utente.getEmail());
-        //TODO: Assert.assertEquals("1234", utente.getHashedPassword());
         Assert.assertEquals(Utente.RUOLO.CLIENTE, utente.getRuolo());
-        Assert.assertEquals("2003-02-02", utente.getDataNascita().toString());
+        Assert.assertEquals("1975-02-02", utente.getDataNascita().toString());
         Assert.assertEquals("1234567890", utente.getTelefono());
-        Assert.assertFalse(utente.isCambiaPassword());
+        Assert.assertTrue(utente.isCambiaPassword());
         Assert.assertFalse(utente.isDisabilitato());
-        Assert.assertEquals("Via Verdi 22, Lecce", utente.getResidenza());
-        Assert.assertEquals("studente", utente.getProfessione());
-        //TODO: ordini, iterazioni, salt
+        Assert.assertEquals("Via Verdi 22, Milano", utente.getResidenza());
+        Assert.assertEquals("Pilota", utente.getProfessione());
 
 
-        IDAO.removeByEmail("emanuele@gmail.com");
+        UDAO.removeByEmail("emanuele@gmail.com");
     }
 
     @Test
     public void removeByEmailTest() {
         ArrayList<Ordine> ordini = new ArrayList<>();
         ArrayList<IInterazioneUtente> interazioni = new ArrayList<>();
-        IDAO.addUtente(new Utente("Emanuele" ,"Romano", "emanuele@gmail.com", "1234", Utente.RUOLO.CLIENTE, Date.valueOf("2003-02-02") ,"1234567890", Date.valueOf("2023-12-12"), false, false, "Via Verdi 22, Lecce", "studente", ordini, interazioni, SHA512Hashing.generateSalt()));
+        UDAO.addUtente(new Utente("Emanuele" ,"Romano", "emanuele@gmail.com", "1234", Utente.RUOLO.CLIENTE, Date.valueOf("2003-02-02") ,"1234567890", Date.valueOf("2023-12-12"), false, false, "Via Verdi 22, Lecce", "studente", ordini, interazioni, SHA512Hashing.generateSalt()));
 
-        boolean result = IDAO.removeByEmail("emanuele@gmail.com");
+        boolean result = UDAO.removeByEmail("emanuele@gmail.com");
 
         Assert.assertTrue(result);
-        Assert.assertNull(IDAO.findByEmail("emanuele@gmail.com"));
+        Assert.assertNull(UDAO.findByEmail("emanuele@gmail.com"));
 
-        for(Utente u : IDAO.findAll()){
-            System.out.println(u);
-        }
     }
 
     @Test
     public void findByIdTest() {
-        Utente utente = IDAO.findById(IDAO.getLastInsertId());
+        Utente utente = UDAO.findById(UDAO.getLastInsertId());
         Assert.assertNotNull(utente);
-        Assert.assertEquals(IDAO.getLastInsertId(), utente.getId());
+        Assert.assertEquals(UDAO.getLastInsertId(), utente.getId());
         Assert.assertEquals("Vittorio", utente.getNome());
         Assert.assertEquals("Veneto", utente.getCognome());
         Assert.assertEquals("vittorio@gmail.com", utente.getEmail());
-       //TODO: Assert.assertEquals("1234", utente.getHashedPassword());
         Assert.assertEquals(Utente.RUOLO.CUCINA, utente.getRuolo());
         Assert.assertEquals("1975-02-02", utente.getDataNascita().toString());
         Assert.assertEquals("1234567890", utente.getTelefono());
         Assert.assertTrue(utente.isCambiaPassword());
         Assert.assertFalse(utente.isDisabilitato());
-        System.out.println(utente);
     }
 
     @Test
@@ -131,39 +127,175 @@ import java.util.ArrayList;
         Assert.assertEquals(utente.getEmail(), "valentino@gmail.com");
         Assert.assertEquals("Valentino", utente.getNome());
         Assert.assertEquals("Rossi", utente.getCognome());
-        //TODO: Assert.assertEquals("1234", utente.getHashedPassword());
         Assert.assertEquals(Utente.RUOLO.CLIENTE, utente.getRuolo());
         Assert.assertEquals("1975-02-02", utente.getDataNascita().toString());
         Assert.assertEquals("1234567890", utente.getTelefono());
         Assert.assertTrue(utente.isCambiaPassword());
         Assert.assertFalse(utente.isDisabilitato());
 
-        System.out.println(utente);
+
     }
 
     @Test
-    public void getAllUtentiTest() {
-        ArrayList<Utente> utenti = IDAO.findAll();
+    public void findAllTest() {
+        ArrayList<Utente> utenti = UDAO.findAll();
         Assert.assertNotNull(utenti);
         Assert.assertEquals(3, utenti.size());
+        Assert.assertEquals("mario@gmail.com", utenti.get(0).getEmail());
+        Assert.assertEquals("valentino@gmail.com", utenti.get(1).getEmail());
+        Assert.assertEquals("vittorio@gmail.com", utenti.get(2).getEmail());
+    }
 
-        for(Utente u : utenti){
-            Assert.assertNotNull(u.getId());
-            System.out.println(u);
-        }
+    @Test
+    public void findAllClientiTest() {
+        ArrayList<Utente> utenti = UDAO.findAllClienti();
+        Assert.assertNotNull(utenti);
+        Assert.assertEquals(1, utenti.size());
+        Assert.assertEquals("valentino@gmail.com", utenti.get(0).getEmail());
+
+    }
+
+
+    @Test
+    public void findAllCucinaTest() {
+        ArrayList<Utente> utenti = UDAO.findAllCucina();
+        Assert.assertNotNull(utenti);
+        Assert.assertEquals(1, utenti.size());
+        Assert.assertEquals("vittorio@gmail.com", utenti.get(0).getEmail());
+
+    }
+
+    @Test
+    public void findAllAmministratoriTest() {
+        ArrayList<Utente> utenti = UDAO.findAllAmministratori();
+        Assert.assertNotNull(utenti);
+        Assert.assertEquals(1, utenti.size());
+        Assert.assertEquals("mario@gmail.com", utenti.get(0).getEmail());
+
+    }
+
+    @Test
+    public void saltExistsTest() {
+        Utente utente = UDAO.findByEmail("vittorio@gmail.com");
+        Assert.assertTrue(UDAO.saltExists(utente.getSaltHex()));
+        Assert.assertFalse(UDAO.saltExists("saltCheNonEsiste"));
+    }
+
+    @Test
+    public void checkIfUtenteHasPurchasedArticoloTest() {
+        TipologiaProdottoDAO TPDAO = TipologiaProdottoDAO.getInstance();
+        ArticoloDAO ADAO = ArticoloDAO.getInstance();
+        OrdineDAO ODAO = OrdineDAO.getInstance();
+
+        // Istanzio un utente
+        Utente clienteTest = UDAO.findByEmail("valentino@gmail.com");
+
+        // Creare tipologia prodotto
+        TPDAO.addTipologia("Tipologia1");
+        TipologiaProdotto tipProd = TPDAO.findTipologiaByName("Tipologia1");
+
+        // Creare un prodotto
+        Prodotto prodottoTest = new Prodotto("ProdottoTest", "[...]", 4f, 80, tipProd, null, null, null);
+        ADAO.addArticolo(prodottoTest);
+        prodottoTest = (Prodotto) ADAO.findById(ADAO.getLastInsertId());
+
+        // Creare un carrello con quel prodotto
+        HashMap<Integer, Integer> prodottiNelCarrello = new HashMap<>();
+        prodottiNelCarrello.put(prodottoTest.getId(), 1);
+        Carrello carrelloTest = new Carrello(prodottiNelCarrello, clienteTest);
+
+        // Creare un ordine
+        ODAO.createOrdine(carrelloTest);
+        Ordine ordineTest = ODAO.findById(ODAO.getLastInsertId());
+
+        // Assert
+        Assert.assertTrue(UDAO.checkIfUtenteHasPurchasedArticolo(clienteTest, prodottoTest));
+
+        // Eliminare
+        ODAO.remove(ordineTest);
+        ADAO.removeArticolo(prodottoTest);
+        TPDAO.removeTipologia(tipProd.getId());
+    }
+
+    @Test
+    public void checkIfUtenteHasCommentedArticoloTest() {
+        TipologiaProdottoDAO TPDAO = TipologiaProdottoDAO.getInstance();
+        ArticoloDAO ADAO = ArticoloDAO.getInstance();
+        InterazioneUtenteDAO IUDAO = InterazioneUtenteDAO.getInstance();
+
+        // Istanzio un utente
+        Utente clienteTest = UDAO.findByEmail("valentino@gmail.com");
+
+        // Creare tipologia prodotto
+        TPDAO.addTipologia("Tipologia1");
+        TipologiaProdotto tipProd = TPDAO.findTipologiaByName("Tipologia1");
+
+        // Creare un prodotto
+        Prodotto prodottoTest = new Prodotto("ProdottoTest", "[...]", 4f, 80, tipProd, null, null, null);
+        ADAO.addArticolo(prodottoTest);
+        prodottoTest = (Prodotto) ADAO.findById(ADAO.getLastInsertId());
+
+        // Creare un commento per prodottoTest
+        LocalDateTime localDateTime = LocalDateTime.now();
+        Timestamp timestampLocalDateTime = Timestamp.valueOf(localDateTime);
+        CommentoCliente commentoTest = new CommentoCliente(clienteTest, prodottoTest.getId(), "prova", IInterazioneUtente.INDICE_GRADIMENTO.CINQUE, timestampLocalDateTime);
+        IUDAO.addCommento(commentoTest);
+        commentoTest = IUDAO.findCommentoById(IUDAO.getLastCommentoInsertId());
+
+        // Assert
+        Assert.assertTrue(UDAO.checkIfUtenteHasCommentedArticolo(clienteTest, prodottoTest));
+
+        // Eliminare
+        IUDAO.removeCommento(commentoTest.getId());
+        ADAO.removeArticolo(prodottoTest);
+        TPDAO.removeTipologia(tipProd.getId());
+    }
+
+    @Test
+    public void isFirstAccessTest() {
+        Assert.assertTrue(UDAO.isFirstAccess("valentino@gmail.com"));
+        Assert.assertTrue(UDAO.setCambiaPassword("valentino@gmail.com", false));
+        Assert.assertFalse(UDAO.isFirstAccess("valentino@gmail.com"));
+    }
+
+    @Test
+    public void setCambiaPasswordTest() {
+        Assert.assertTrue(UDAO.setCambiaPassword("valentino@gmail.com", false));
+        Assert.assertFalse(UDAO.isFirstAccess("valentino@gmail.com"));
+        Assert.assertTrue(UDAO.setCambiaPassword("valentino@gmail.com", true));
+        Assert.assertTrue(UDAO.isFirstAccess("valentino@gmail.com"));
+    }
+
+    @Test
+    public void changePasswordTest() {
+        Assert.assertTrue(UDAO.changePassword("valentino@gmail.com", "hashDiProva"));
+        Assert.assertEquals("hashDiProva", UDAO.findByEmail("valentino@gmail.com").getHashedPassword());
+
+    }
+
+    @Test
+    public void setDisabilitatoUtenteTest() {
+        Utente utente = UDAO.findByEmail("valentino@gmail.com");
+        UDAO.setDisabilitatoUtente(utente.getId(), true);
+
+
+        Assert.assertFalse(UDAO.isEnable("valentino@gmail.com"));
+        UDAO.setDisabilitatoUtente(utente.getId(), false);
+        Assert.assertTrue(UDAO.isEnable("valentino@gmail.com"));
+
     }
 
     @Test
     public void userExistsTest() {
-        boolean exists = IDAO.userExists("valentino@gmail.com");
+        boolean exists = UDAO.userExists("valentino@gmail.com");
         Assert.assertTrue(exists);
 
-        exists = IDAO.userExists("emailacaso@gmail.com");
+        exists = UDAO.userExists("emailacaso@gmail.com");
         Assert.assertFalse(exists);
 
-        Utente utente = IDAO.findByEmail("valentino@gmail.com");
+        Utente utente = UDAO.findByEmail("valentino@gmail.com");
         Assert.assertNotNull(utente);
-        Assert.assertEquals(IDAO.findByEmail("valentino@gmail.com").getId(), utente.getId());
+        Assert.assertEquals(UDAO.findByEmail("valentino@gmail.com").getId(), utente.getId());
     }
 
     @Test
@@ -176,50 +308,48 @@ import java.util.ArrayList;
 
         StrategyFactory strategyFactory = new StrategyFactory();
 
-        //TODO: spostare nel business: il dao usa il business
         PasswordHashingContext passwordHashingContext = new PasswordHashingContext(strategyFactory.getStrategy("SHA512"));
         String hashedPassword = passwordHashingContext.executeStrategy(password, saltHex);
 
-        IDAO.addUtente(new Utente("Emanuele" ,"Romano", "emanuele@gmail.com", hashedPassword, Utente.RUOLO.CLIENTE, Date.valueOf("2003-02-02") ,"1234567890", Date.valueOf("2023-12-12"), false, false, "Via Verdi 22, Lecce", "studente", ordini, interazioni, saltHex));
+        UDAO.addUtente(new Utente("Emanuele" ,"Romano", "emanuele@gmail.com", hashedPassword, Utente.RUOLO.CLIENTE, Date.valueOf("2003-02-02") ,"1234567890", Date.valueOf("2023-12-12"), false, false, "Via Verdi 22, Lecce", "studente", ordini, interazioni, saltHex));
 
-        boolean passwordOk = IDAO.passwordOk("emanuele@gmail.com", password);
+        boolean passwordOk = UDAO.passwordOk("emanuele@gmail.com", hashedPassword);
         Assert.assertTrue(passwordOk);
 
-        passwordOk = IDAO.passwordOk("valentino@gmail.com", "passwordErrata");
+        passwordOk = UDAO.passwordOk("valentino@gmail.com", "passwordErrata");
         Assert.assertFalse(passwordOk);
 
-        Utente utente = IDAO.findByEmail("emanuele@gmail.com");
+        Utente utente = UDAO.findByEmail("emanuele@gmail.com");
         Assert.assertEquals(hashedPassword, utente.getHashedPassword());
 
-        IDAO.removeByEmail("emanuele@gmail.com");
+        UDAO.removeByEmail("emanuele@gmail.com");
     }
 
     @Test
     public void isClienteTest() {
-        Utente cliente = IDAO.findByEmail("valentino@gmail.com");
-        boolean isCliente = IDAO.isCliente(cliente.getId());
+        Utente cliente = UDAO.findByEmail("valentino@gmail.com");
+        boolean isCliente = UDAO.isCliente(cliente.getId());
 
         Assert.assertTrue(isCliente);
         Assert.assertEquals(cliente.getRuolo(), Utente.RUOLO.CLIENTE);
 
-        cliente = IDAO.findByEmail("mario@gmail.com");
-        isCliente = IDAO.isCliente(cliente.getId());
+        cliente = UDAO.findByEmail("mario@gmail.com");
+        isCliente = UDAO.isCliente(cliente.getId());
 
         Assert.assertFalse(isCliente);
         Assert.assertNotSame(Utente.RUOLO.CLIENTE, cliente.getRuolo());
 
-        System.out.println(IDAO.findByEmail("mario@gmail.com"));
     }
 
     @Test
     public void isAmministratoreTest() {
-        Utente amministratore = IDAO.findByEmail("valentino@gmail.com");
-        boolean isAmministratore = IDAO.isAmministratore(amministratore.getId());
+        Utente amministratore = UDAO.findByEmail("valentino@gmail.com");
+        boolean isAmministratore = UDAO.isAmministratore(amministratore.getId());
         Assert.assertFalse(isAmministratore);
         Assert.assertNotSame (Utente.RUOLO.AMMINISTRATORE, amministratore.getRuolo());
 
-        amministratore = IDAO.findByEmail("mario@gmail.com");
-        isAmministratore = IDAO.isAmministratore(amministratore.getId());
+        amministratore = UDAO.findByEmail("mario@gmail.com");
+        isAmministratore = UDAO.isAmministratore(amministratore.getId());
         Assert.assertTrue(isAmministratore);
         Assert.assertEquals(Utente.RUOLO.AMMINISTRATORE, amministratore.getRuolo());
 
@@ -227,22 +357,22 @@ import java.util.ArrayList;
 
     @Test
     public void isCucinaTest() {
-        Utente cucina = IDAO.findByEmail("valentino@gmail.com");
+        Utente cucina = UDAO.findByEmail("valentino@gmail.com");
 
-        boolean isCucina = IDAO.isCucina(cucina.getId());
+        boolean isCucina = UDAO.isCucina(cucina.getId());
         Assert.assertFalse(isCucina);
         Assert.assertNotSame(Utente.RUOLO.CUCINA, cucina.getRuolo());
 
-        cucina = IDAO.findByEmail("vittorio@gmail.com");
-        isCucina = IDAO.isCucina(cucina.getId());
+        cucina = UDAO.findByEmail("vittorio@gmail.com");
+        isCucina = UDAO.isCucina(cucina.getId());
         Assert.assertTrue(isCucina);
         Assert.assertEquals(Utente.RUOLO.CUCINA, cucina.getRuolo());
     }
 
     @Test
     public void isEnableTest() {
-        Utente utente = IDAO.findByEmail("valentino@gmail.com");
-        boolean isEnable = IDAO.isEnable("valentino@gmail.com");
+        Utente utente = UDAO.findByEmail("valentino@gmail.com");
+        boolean isEnable = UDAO.isEnable("valentino@gmail.com");
 
         Assert.assertTrue(isEnable);
         Assert.assertFalse(utente.isDisabilitato());
@@ -250,7 +380,7 @@ import java.util.ArrayList;
 
     @Test
     public void caricaClienteTest() {
-        Utente u = IDAO.caricaCliente("valentino@gmail.com");
+        Utente u = UDAO.caricaCliente("valentino@gmail.com");
         Assert.assertNotNull(u);
         Assert.assertEquals("valentino@gmail.com", u.getEmail());
         Assert.assertEquals("Via Verdi 22, Milano", u.getResidenza());  //attributo esclusivo di cliente
@@ -258,18 +388,16 @@ import java.util.ArrayList;
 
     @Test
     public void caricaAmministratoreTest() {
-        Utente u = IDAO.caricaAmministratore("mario@gmail.com");
+        Utente u = UDAO.caricaAmministratore("mario@gmail.com");
         Assert.assertNotNull(u);
         Assert.assertEquals("mario@gmail.com", u.getEmail());
-        System.out.println(u);
     }
 
     @Test
     public void caricaCucinaTest() {
-        Utente u = IDAO.caricaCucina("vittorio@gmail.com");
+        Utente u = UDAO.caricaCucina("vittorio@gmail.com");
         Assert.assertNotNull(u);
         Assert.assertEquals("vittorio@gmail.com", u.getEmail());
-        System.out.println(u);
     }
 
     @Test
@@ -278,15 +406,14 @@ import java.util.ArrayList;
         ArrayList<IInterazioneUtente> interazioni = new ArrayList<>();
 
         Utente utente = new Utente("Valentino" ,"Vaglio", "valentino@gmail.com", "1234", Utente.RUOLO.CLIENTE, Date.valueOf("1940-12-12") ,"1234567890", Date.valueOf("2022-12-12") , false, false, "Via Verdi 22, Milano", "Pilota", ordini, interazioni, SHA512Hashing.generateSalt());
-        utente.setId(IDAO.findByEmail("valentino@gmail.com").getId());
+        utente.setId(UDAO.findByEmail("valentino@gmail.com").getId());
 
-        boolean result = IDAO.update(utente);
-        Utente modUtente = IDAO.findByEmail("valentino@gmail.com");
+        boolean result = UDAO.update(utente);
+        Utente modUtente = UDAO.findByEmail("valentino@gmail.com");
 
         Assert.assertTrue(result);
         Assert.assertEquals("Vaglio", modUtente.getCognome());
 
-        System.out.println(modUtente);
     }
 }
 

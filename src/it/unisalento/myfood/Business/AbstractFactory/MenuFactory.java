@@ -4,7 +4,7 @@ import it.unisalento.myfood.DAO.ArticoloDAO;
 import it.unisalento.myfood.DAO.IArticoloDAO;
 import it.unisalento.myfood.model.Composite.IArticolo;
 import it.unisalento.myfood.model.Composite.Menu;
-import it.unisalento.myfood.model.Ingrediente;
+import it.unisalento.myfood.model.TipologiaIngrediente;
 import it.unisalento.myfood.model.TipologiaProdotto;
 
 import java.util.List;
@@ -18,14 +18,16 @@ public class MenuFactory implements IArticoloFactory {
     }
 
     @Override
-    public List<IArticolo> filterByTipologia(TipologiaProdotto tipoProdotto) {
+    public List<IArticolo> filterByTipologiaProdotto(TipologiaProdotto tipoProdotto) {
 
         return aDAO.findMenu();
     }
 
+    //la tipologia prodotto è sempre menu
     @Override
-    public List<IArticolo> filterByTipologiaEIngrediente(TipologiaProdotto tipologiaProdotto, Ingrediente ingrediente) {
-        return aDAO.findMenuContains(ingrediente);
+    public List<IArticolo> filterByTipologie(TipologiaProdotto tipologiaProdotto, TipologiaIngrediente tipologiaIngrediente) {
+        return aDAO.findMenuContainsTipologiaIngrediente(tipologiaIngrediente);
     }
+
 }
 

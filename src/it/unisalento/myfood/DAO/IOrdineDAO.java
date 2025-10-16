@@ -19,6 +19,10 @@ public interface IOrdineDAO {
 
     ArrayList<Ordine> findByCliente(Integer idCliente);
 
+    ArrayList<Ordine> findAll();
+
+    ArrayList<Ordine> findByClienteAndState(Integer idCliente, IOrdine.STATO stato);
+
     HashMap<Integer, Integer> articoliPerIdOrdine(Integer id);
 
     Integer getLastInsertId();
@@ -28,4 +32,6 @@ public interface IOrdineDAO {
     boolean setRicorrente(Integer idOrdine, boolean ricorrente);
 
     boolean remove(Ordine ordine);
+
+    boolean updateOrdine(Ordine o);
 }

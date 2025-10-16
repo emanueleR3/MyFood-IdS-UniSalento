@@ -4,15 +4,15 @@ import it.unisalento.myfood.DBInterface.Command.DbOperationExecutor;
 import it.unisalento.myfood.DBInterface.Command.IDbOperation;
 import it.unisalento.myfood.DBInterface.Command.ReadOperation;
 import it.unisalento.myfood.DBInterface.Command.WriteOperation;
+import it.unisalento.myfood.DBInterface.DbConnection;
 import it.unisalento.myfood.model.Composite.CommentoCliente;
 import it.unisalento.myfood.model.Composite.IArticolo;
 import it.unisalento.myfood.model.Composite.Menu;
 import it.unisalento.myfood.model.Composite.Prodotto;
 import it.unisalento.myfood.model.Ingrediente;
 import it.unisalento.myfood.model.Ordine;
+import it.unisalento.myfood.model.TipologiaIngrediente;
 import it.unisalento.myfood.model.TipologiaProdotto;
-import it.unisalento.myfood.model.Utente;
-import org.apache.pdfbox.pdfparser.XrefTrailerResolver;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -59,7 +59,7 @@ public class ArticoloDAO implements IArticoloDAO {
 
 
     @Override
-    public List<IArticolo> findProdottoByTipologia(TipologiaProdotto tipologiaProdotto) {
+    public List<IArticolo> findProdottoByTipologiaProdotto(TipologiaProdotto tipologiaProdotto) {
 
         ArrayList<IArticolo> prodotti = new ArrayList<>();
 
@@ -97,16 +97,15 @@ public class ArticoloDAO implements IArticoloDAO {
         return prodotti;
     }
 
-
     @Override
-    public List<IArticolo> findProdottoByTipologiaContains(TipologiaProdotto tipologiaProdotto, Ingrediente ingrediente) {
+    public List<IArticolo> findProdottoByTipologie(TipologiaProdotto tipologiaProdotto, TipologiaIngrediente tipologiaIngrediente) {
 
         ArrayList<IArticolo> prodotti = new ArrayList<>();
 
         DbOperationExecutor executor = new DbOperationExecutor();
-        String sql = "SELECT A.idArticolo FROM (Articolo AS A " +
-                "INNER JOIN PRODOTTO AS P ON A.idArticolo = P.Articolo_idArticolo) JOIN Prodotto_has_Ingrediente AS PI ON p.Articolo_idArticolo = PI.Prodotto_Articolo_idArticolo " +
-                "WHERE P.Tipologia_idTipologia = " + tipologiaProdotto.getId() + " AND " + " Ingrediente_idIngrediente = " + ingrediente.getId() + ";";
+        String sql = "SELECT DISTINCT A.idArticolo FROM ((Articolo AS A " +
+                "INNER JOIN PRODOTTO AS P ON A.idArticolo = P.Articolo_idArticolo) JOIN Prodotto_has_Ingrediente AS PI ON p.Articolo_idArticolo = PI.Prodotto_Articolo_idArticolo) JOIN Ingrediente AS I ON PI.Ingrediente_idIngrediente = I.idIngrediente " +
+                "WHERE P.Tipologia_idTipologia = " + tipologiaProdotto.getId() + " AND " + " TipologiaIngrediente_idTipologiaIngrediente = " + tipologiaIngrediente.getId() + ";";
 
         IDbOperation readOp = new ReadOperation(sql);
         ResultSet rs = executor.executeOperation(readOp).getResultSet();
@@ -130,7 +129,7 @@ public class ArticoloDAO implements IArticoloDAO {
     }
 
     @Override
-    public List<IArticolo> findMenuContains(Ingrediente ingrediente) {
+    public List<IArticolo> findMenuContainsTipologiaIngrediente(TipologiaIngrediente tipologiaIngrediente) {
         DbOperationExecutor executor = new DbOperationExecutor();
 
         // Lista di tutti i Menu presenti
@@ -142,12 +141,13 @@ public class ArticoloDAO implements IArticoloDAO {
                 "WHERE Articolo_idArticolo IN (" +
                         //cerca nei prodotti del menu
                         "SELECT MA.Menu_Articolo_idArticolo " +
-                        "FROM (Menu_has_Articolo AS MA JOIN Articolo AS A ON MA.Articolo_idArticolo = A.idArticolo) JOIN Prodotto_has_Ingrediente AS PI ON A.idArticolo = PI.Prodotto_Articolo_idArticolo " +
-                        "WHERE PI.Ingrediente_idIngrediente = 1 ) OR Articolo_idArticolo IN (" +
+                        "FROM ((Menu_has_Articolo AS MA JOIN Articolo AS A ON MA.Articolo_idArticolo = A.idArticolo) JOIN Prodotto_has_Ingrediente AS PI ON A.idArticolo = PI.Prodotto_Articolo_idArticolo) JOIN Ingrediente AS I ON PI.Ingrediente_idIngrediente = I.idIngrediente " +
+                        "WHERE I.TipologiaIngrediente_idTipologiaIngrediente =  " + tipologiaIngrediente.getId() + " ) OR Articolo_idArticolo IN (" +
                         //cerca nei prodotti dei sottomenu
                         "SELECT MA2.Menu_Articolo_idArticolo " +
-                        "FROM ((Menu_has_Articolo AS MA2 JOIN Menu AS M ON MA2.Articolo_idArticolo = M.Articolo_idArticolo) JOIN Menu_has_Articolo AS MA3 ON M.Articolo_idArticolo = MA3.Menu_Articolo_idArticolo) JOIN Prodotto_has_Ingrediente AS PI2 ON MA3.Articolo_idArticolo = PI2.Prodotto_Articolo_idArticolo " +
-                        "WHERE MA2.Menu_Articolo_idArticolo = M2.Articolo_idArticolo AND PI2.Ingrediente_idIngrediente = " + ingrediente.getId() + ");";
+                        "FROM (((Menu_has_Articolo AS MA2 JOIN Menu AS M ON MA2.Articolo_idArticolo = M.Articolo_idArticolo) JOIN Menu_has_Articolo AS MA3 ON M.Articolo_idArticolo = MA3.Menu_Articolo_idArticolo) JOIN Prodotto_has_Ingrediente AS PI2 ON MA3.Articolo_idArticolo = PI2.Prodotto_Articolo_idArticolo) JOIN Ingrediente AS I2 ON PI2.Ingrediente_idIngrediente = I2.idIngrediente  " +
+                        "WHERE MA2.Menu_Articolo_idArticolo = M2.Articolo_idArticolo AND I2.TipologiaIngrediente_idTipologiaIngrediente = " + tipologiaIngrediente.getId() + ");";
+
 
         IDbOperation readOp = new ReadOperation(sql);
         ResultSet rs = executor.executeOperation(readOp).getResultSet();
@@ -350,6 +350,8 @@ public class ArticoloDAO implements IArticoloDAO {
                 return rowsAffected == 2 + ((Menu) articolo).getArticoli().size();
             }
         }
+
+
         return false;
     }
 
@@ -382,6 +384,8 @@ public class ArticoloDAO implements IArticoloDAO {
 
         IDbOperation writeOp = new WriteOperation(sql);
         int rowsAffected = executor.executeOperation(writeOp).getRowsAffected();
+            DbConnection dbConnection = DbConnection.getInstance();
+            dbConnection.close();
 
         return rowsAffected == 1;
     }
@@ -408,12 +412,17 @@ public class ArticoloDAO implements IArticoloDAO {
             System.out.println("Vendor Error: " + e.getErrorCode());
         } catch (NullPointerException e) {
             System.out.println("Non esiste alcuna relazione tra questo articolo e questo menu");
+        }finally {
+            DbConnection dbConnection = DbConnection.getInstance();
+            dbConnection.close();
         }
 
         // L'articolo esiste nel menu e viene rimosso
         sql = "DELETE FROM Menu_has_Articolo WHERE Menu_Articolo_idArticolo = " + idMenu + " AND Articolo_idArticolo = " + idArticolo + ";";
         IDbOperation writeOp = new WriteOperation(sql);
         int rowsAffected = executor.executeOperation(writeOp).getRowsAffected();
+
+
 
         return rowsAffected == 1;
     }
@@ -443,6 +452,61 @@ public class ArticoloDAO implements IArticoloDAO {
 
         // L'articolo esiste e lo modifico
         sql = "UPDATE Articolo SET nome = '" + articolo.getNome() + "', descrizione = '" + articolo.getDescrizione() + "' WHERE idArticolo = " + articolo.getId() + ";";
+
+        IDbOperation writeOp = new WriteOperation(sql);
+        int rowsAffected = executor.executeOperation(writeOp).getRowsAffected();
+        DbConnection dbConnection = DbConnection.getInstance();
+        dbConnection.close();
+
+        boolean done;
+        if (articolo instanceof Prodotto) {
+            done = editProdotto((Prodotto) articolo);
+
+            ArrayList<Ingrediente> ingredientiDaAggiungere = ((Prodotto) articolo).getIngredienti();
+            ArrayList<Ingrediente> ingredientiPresenti = IngredienteDAO.getInstance().getIngredientiPerProdotto(articolo.getId());
+            for (Ingrediente i : ingredientiPresenti) {
+                removeIngredienteFromProdotto(i.getId(), articolo.getId());
+            }
+            for (Ingrediente i : ingredientiDaAggiungere) {
+                addIngredienteToProdotto(i.getId(), articolo.getId());
+            }
+        } else {
+            done = editMenu((Menu) articolo);
+
+            ArrayList<IArticolo> articoliDaAggiungere = ((Menu) articolo).getArticoli();
+            ArrayList<IArticolo> articoliPresenti = ((Menu) findById(articolo.getId())).getArticoli();
+            for (IArticolo a : articoliPresenti) {
+                removeArticoloFromMenu(articolo.getId(), a.getId());
+            }
+            for (IArticolo a : articoliDaAggiungere) {
+                addArticoloToMenu(articolo.getId(), a.getId());
+            }
+        }
+
+        if (!done) {
+            System.out.println("Articolo non modificato!");
+            return done;
+        }
+
+        return rowsAffected == 1;
+    }
+
+    public boolean editMenu(Menu menu) {
+        DbOperationExecutor executor = new DbOperationExecutor();
+
+        String sql = "UPDATE Menu SET sconto = " + menu.getSconto() + " WHERE Articolo_idArticolo = " + menu.getId() + ";";
+
+        IDbOperation writeOp = new WriteOperation(sql);
+        int rowsAffected = executor.executeOperation(writeOp).getRowsAffected();
+
+        return rowsAffected == 1;
+    }
+
+    public boolean editProdotto(Prodotto prodotto) {
+        DbOperationExecutor executor = new DbOperationExecutor();
+
+        String sql = "UPDATE Prodotto SET prezzo = " + prodotto.getPrezzo() + ", disponibilita = " + prodotto.getPezziDisponibili() + ", Tipologia_idTipologia = " + ((Prodotto) prodotto).getTipologiaProdotto().getId() + " " +
+                "WHERE Articolo_idArticolo = " + prodotto.getId() + ";";
 
         IDbOperation writeOp = new WriteOperation(sql);
         int rowsAffected = executor.executeOperation(writeOp).getRowsAffected();
@@ -477,6 +541,8 @@ public class ArticoloDAO implements IArticoloDAO {
         } catch (NullPointerException e) {
             System.out.println("L'articolo che si vuole eliminare non esiste");
         }
+
+
 
         int numberOfRecords = 0;    // Per confrontare con il numero di record effettivi da eliminare
         int rowsAffected = 0;
@@ -583,25 +649,6 @@ public class ArticoloDAO implements IArticoloDAO {
         return rowsAffected == numberOfRecords;
     }
 
-    /**
-     * @return ritorna true se la rimozione è avvenuta con successo, altrimenti ritorna falso
-     * @implNote rimuove l'articolo il cui id passato e tutti gli eventuali articoli in esso contenuti (caso menu e supermenu)
-     */
-    @Override
-    public boolean removeArticoloRecursive(IArticolo articolo) {
-        if(articolo instanceof Prodotto)
-           return removeArticolo(articolo);
-
-        if (((Menu) articolo).getArticoli() != null && !((Menu) articolo).getArticoli().isEmpty()) {  //per gestire il caso menu senza prodotti
-            for (IArticolo art : ((Menu) articolo).getArticoli()) {
-                removeArticoloFromMenu(articolo.getId(), art.getId());
-                removeArticoloRecursive(art);
-            }
-
-        }
-        return removeArticolo(articolo);
-    }
-
     @Override
     public boolean addIngredienteToProdotto(Integer idIngrediente, Integer idProdotto) {
         DbOperationExecutor executor = new DbOperationExecutor();
@@ -663,6 +710,7 @@ public class ArticoloDAO implements IArticoloDAO {
         IDbOperation writeOp = new WriteOperation(sql);
         int rowsAffected = executor.executeOperation(writeOp).getRowsAffected();
 
+
         return rowsAffected == 1;
     }
 
@@ -710,7 +758,6 @@ public class ArticoloDAO implements IArticoloDAO {
                 }
             }
         }
-
         return numberOfItems == rowsAffected;
     }
 

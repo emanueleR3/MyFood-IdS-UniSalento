@@ -11,22 +11,20 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.naming.InsufficientResourcesException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class IngredienteDAOTest {
 
-    private ITipologiaIngredienteDAO TIDAO = TipologiaIngredienteDAO.getInstance();
-    private ITipologiaProdottoDAO TPDAO = TipologiaProdottoDAO.getInstance();
-    private IIngredienteDAO IDAO = IngredienteDAO.getInstance();
-    private IAziendaDAO ADAO = AziendaDAO.getInstance();
-    private IArticoloDAO ARDAO = ArticoloDAO.getInstance();
+    private final ITipologiaIngredienteDAO TIDAO = TipologiaIngredienteDAO.getInstance();
+    private final ITipologiaProdottoDAO TPDAO = TipologiaProdottoDAO.getInstance();
+    private final IIngredienteDAO IDAO = IngredienteDAO.getInstance();
+    private final IAziendaDAO ADAO = AziendaDAO.getInstance();
+    private final IArticoloDAO ARDAO = ArticoloDAO.getInstance();
     private TipologiaIngrediente tipSal;
     private TipologiaIngrediente tipBurg;
     private TipologiaProdotto panTip;
-    private Ingrediente burger_scottona;
+    private Ingrediente burgerScottona;
     private Ingrediente bacon;
     private Azienda distributoreProsciutti1;
     private Azienda distributoreProsciutti2;
@@ -53,22 +51,22 @@ public class IngredienteDAOTest {
         distributori.add(distributoreProsciutti1);
         distributori.add(distributoreProsciutti2);
 
-        TIDAO.addTipologia("Salume");
+        TIDAO.addTipologia("Tipologiai1");
         tipSal = TIDAO.findTipologiaById(TIDAO.getLastInsertId());
-        TIDAO.addTipologia("Burger");
+        TIDAO.addTipologia("Tipologiai2");
         tipBurg = TIDAO.findTipologiaById(TIDAO.getLastInsertId());
 
-        TPDAO.addTipologia("Panini");
-        panTip = TPDAO.findTipologiaByName("Panini");
+        TPDAO.addTipologia("Tipologiap1");
+        panTip = TPDAO.findTipologiaByName("Tipologiap1");
 
         IDAO.addIngrediente(new Ingrediente("Buger di scottona", tipBurg, fiorucci, distributori));
-        burger_scottona = IDAO.findIngredienteById(IDAO.getLastInsertId());
+        burgerScottona = IDAO.findIngredienteById(IDAO.getLastInsertId());
 
         IDAO.addIngrediente(new Ingrediente("Bacon", tipSal, fiorucci, distributori));
         bacon = IDAO.findIngredienteById(IDAO.getLastInsertId());
 
         ArrayList<Ingrediente> ingredienti = new ArrayList<>();
-        ingredienti.add(burger_scottona);
+        ingredienti.add(burgerScottona);
         ingredienti.add(bacon);
 
         panino = new Prodotto("Bacon Burger", "bacon croccante [...]", 4.60f, 80, panTip, ingredienti, null, null);
@@ -82,9 +80,9 @@ public class IngredienteDAOTest {
     public void tearDown(){
         ARDAO.removeArticolo(panino);
         TPDAO.removeTipologia(panTip.getId());
-        IDAO.removeIngrediente(burger_scottona.getId());
+        IDAO.removeIngrediente(burgerScottona.getId());
         IDAO.removeIngrediente(bacon.getId());
-        TIDAO.removeTipologia(tipSal.getId());//TODO: problema: violazione vincolo d'integrità referenziale, il burger non viene eliminato, il resto si
+        TIDAO.removeTipologia(tipSal.getId());
         TIDAO.removeTipologia(tipBurg.getId());
 
         ADAO.removeAzienda(fiorucci.getId());
@@ -94,39 +92,52 @@ public class IngredienteDAOTest {
     }
 
     @Test
+    public void getLastInsertIdTest() {
+        Assert.assertEquals("Bacon", bacon.getNome());
+    }
+
+    @Test
+    public void findIngredientePerTipologiaTest() {
+        List<Ingrediente> ingredienti = IDAO.findIngredientePerTipologia("Tipologiai1");
+
+        for (Ingrediente ingrediente : ingredienti) {
+            Assert.assertNotNull(ingrediente);
+            Assert.assertNotNull(ingrediente.getId());
+        }
+
+        Assert.assertEquals(bacon.getId(), ingredienti.get(0).getId());
+        Assert.assertEquals(bacon.getNome(), ingredienti.get(0).getNome());
+
+    }
+
+    @Test
     public void getIngredientiPerProdottoTest(){
         List<Ingrediente> ingredienti = IDAO.getIngredientiPerProdotto(panino.getId());
         Assert.assertNotNull(ingredienti);
-        Assert.assertTrue(ingredienti.size() > 0);
-        Assert.assertEquals(ingredienti.get(0).getId(), burger_scottona.getId());
+        Assert.assertFalse(ingredienti.isEmpty());
+        Assert.assertEquals(ingredienti.get(0).getId(), burgerScottona.getId());
         Assert.assertEquals(ingredienti.get(1).getId(), bacon.getId());
 
-        for (Ingrediente i : ingredienti){
-            System.out.println(i);
-        }
     }
 
     @Test
     public void findIngredienteByIdTest() {
-        Ingrediente ingrediente = IDAO.findIngredienteById(burger_scottona.getId());
+        Ingrediente ingrediente = IDAO.findIngredienteById(burgerScottona.getId());
         Assert.assertNotNull(ingrediente);
-        Assert.assertEquals(burger_scottona.getId(), ingrediente.getId());
+        Assert.assertEquals(burgerScottona.getId(), ingrediente.getId());
         Assert.assertEquals("Buger di scottona", ingrediente.getNome());
-        Assert.assertEquals("Burger", ingrediente.getTipologiaIngrediente().getNome());
+        Assert.assertEquals("Tipologiai2", ingrediente.getTipologiaIngrediente().getNome());
         Assert.assertEquals(fiorucci.getId(), ingrediente.getProduttore().getId());
-        System.out.println(ingrediente);
     }
 
     @Test
     public void getDistributoriPerIngredienteTest() {
-        ArrayList<Azienda> distributori = IDAO.getDistributoriPerIngrediente(burger_scottona.getId());
+        ArrayList<Azienda> distributori = IDAO.getDistributoriPerIngrediente(burgerScottona.getId());
         Assert.assertNotNull(distributori);
         Assert.assertEquals(distributoreProsciutti1.getId(), distributori.get(0).getId());
         Assert.assertEquals(distributoreProsciutti2.getId(), distributori.get(1).getId());
         Assert.assertEquals(2, distributori.size());
-        for(Azienda d : distributori){
-            System.out.println(d);
-        }
+
     }
 
     @Test
@@ -134,9 +145,8 @@ public class IngredienteDAOTest {
         boolean result = IDAO.addIngrediente(new Ingrediente("Buger di pollo", tipBurg, fiorucci, distributori));
         Assert.assertTrue(result);
         Ingrediente burger_pollo = IDAO.findIngredienteById(IDAO.getLastInsertId());
-        System.out.println(burger_pollo);
         Assert.assertEquals("Buger di pollo", burger_pollo.getNome());
-        Assert.assertEquals("Burger", burger_pollo.getTipologiaIngrediente().getNome());
+        Assert.assertEquals("Tipologiai2", burger_pollo.getTipologiaIngrediente().getNome());
         Assert.assertEquals(fiorucci.getId(), burger_pollo.getProduttore().getId());
         Assert.assertEquals(distributoreProsciutti1.getId(), burger_pollo.getDistributori().get(0).getId());
         Assert.assertEquals(distributoreProsciutti2.getId(), burger_pollo.getDistributori().get(1).getId());
@@ -151,23 +161,21 @@ public class IngredienteDAOTest {
         boolean result = IDAO.removeIngrediente(burger_pollo.getId());
         Assert.assertTrue(result);
         Assert.assertNull(IDAO.findIngredienteById(burger_pollo.getId()).getId());
-        System.out.println(IDAO.findIngredienteById(burger_pollo.getId()));
     }
 
     @Test
     public void editIngredienteTest() {
-        burger_scottona.setNome("Burger di manzo");
-        boolean result = IDAO.editIngrediente(burger_scottona);
+        burgerScottona.setNome("Burger di manzo");
+        boolean result = IDAO.editIngrediente(burgerScottona);
 
         Assert.assertTrue(result);
-        Ingrediente ingrediente = IDAO.findIngredienteById(burger_scottona.getId());
+        Ingrediente ingrediente = IDAO.findIngredienteById(burgerScottona.getId());
         Assert.assertEquals( "Burger di manzo", ingrediente.getNome());
-        Assert.assertEquals("Burger", ingrediente.getTipologiaIngrediente().getNome());
+        Assert.assertEquals("Tipologiai2", ingrediente.getTipologiaIngrediente().getNome());
         Assert.assertEquals(fiorucci.getId(), ingrediente.getProduttore().getId());
         Assert.assertEquals(distributoreProsciutti1.getId(), ingrediente.getDistributori().get(0).getId());
         Assert.assertEquals(distributoreProsciutti2.getId(), ingrediente.getDistributori().get(1).getId());
 
-        System.out.println(ingrediente);
 
     }
 
@@ -175,17 +183,17 @@ public class IngredienteDAOTest {
     public void addDistributoreToIngredienteTest() {
         ADAO.addAzienda("DistributoreCarni S.P.A.", "14733447857");
         Azienda distributoreCarni = ADAO.findById(ADAO.getLastInsertId());
-        boolean result = IDAO.addDistributoreToIngrediente(burger_scottona.getId(), distributoreCarni.getId());
+        boolean result = IDAO.addDistributoreToIngrediente(burgerScottona.getId(), distributoreCarni.getId());
 
         Assert.assertTrue(result);
 
-        burger_scottona = IDAO.findIngredienteById(burger_scottona.getId());
+        burgerScottona = IDAO.findIngredienteById(burgerScottona.getId());
 
-        Assert.assertEquals(3, burger_scottona.getDistributori().size());
+        Assert.assertEquals(3, burgerScottona.getDistributori().size());
 
-        Assert.assertEquals("14733447857", burger_scottona.getDistributori().get(2).getPartitaIVA());
+        Assert.assertEquals("14733447857", burgerScottona.getDistributori().get(2).getPartitaIVA());
 
-        IDAO.removeDistributoreFromIngrediente(burger_scottona.getId(), distributoreCarni.getId());
+        IDAO.removeDistributoreFromIngrediente(burgerScottona.getId(), distributoreCarni.getId());
         ADAO.removeAzienda(distributoreCarni.getId());
     }
 
@@ -193,12 +201,12 @@ public class IngredienteDAOTest {
     public void removeDistributoreFromIngredienteTest() {
         ADAO.addAzienda("DistributoreCarni S.P.A.", "14733447857");
         Azienda distributoreCarni = ADAO.findById(ADAO.getLastInsertId());
-        IDAO.addDistributoreToIngrediente(burger_scottona.getId(), distributoreCarni.getId());
+        IDAO.addDistributoreToIngrediente(burgerScottona.getId(), distributoreCarni.getId());
 
-        boolean result = IDAO.removeDistributoreFromIngrediente(burger_scottona.getId(), distributoreCarni.getId());
+        boolean result = IDAO.removeDistributoreFromIngrediente(burgerScottona.getId(), distributoreCarni.getId());
 
         Assert.assertTrue(result);
-        Assert.assertEquals(2, burger_scottona.getDistributori().size());
+        Assert.assertEquals(2, burgerScottona.getDistributori().size());
 
         ADAO.removeAzienda(distributoreCarni.getId());
 
@@ -209,15 +217,15 @@ public class IngredienteDAOTest {
     public void findAllTest() {
         ArrayList<Ingrediente> ingredienti = IDAO.findAll();
         Assert.assertNotNull(ingredienti);
-        Assert.assertTrue(ingredienti.size() > 0);
-        Assert.assertEquals(burger_scottona.getId(), ingredienti.get(0).getId());
-        Assert.assertEquals("Buger di scottona", ingredienti.get(0).getNome());
-        Assert.assertEquals("Burger", ingredienti.get(0).getTipologiaIngrediente().getNome());
-        Assert.assertEquals(fiorucci.getId(), ingredienti.get(0).getProduttore().getId());
+        Assert.assertFalse(ingredienti.isEmpty());
+        Assert.assertEquals(burgerScottona.getId(), ingredienti.get(1).getId());
+        Assert.assertEquals("Buger di scottona", ingredienti.get(1).getNome());
+        Assert.assertEquals("Tipologiai2", ingredienti.get(1).getTipologiaIngrediente().getNome());
+        Assert.assertEquals(fiorucci.getId(), ingredienti.get(1).getProduttore().getId());
 
-        Assert.assertEquals(bacon.getId(), ingredienti.get(1).getId());
+        Assert.assertEquals(bacon.getId(), ingredienti.get(0).getId());
         Assert.assertEquals("Bacon", ingredienti.get(0).getNome());
-        Assert.assertEquals("Burger", ingredienti.get(0).getTipologiaIngrediente().getNome());
+        Assert.assertEquals("Tipologiai1", ingredienti.get(0).getTipologiaIngrediente().getNome());
         Assert.assertEquals(fiorucci.getId(), ingredienti.get(0).getProduttore().getId());
 
 

@@ -8,24 +8,53 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 public class PdfBoxAPI implements PdfAPI {
 
+    private final static Integer UP_MARGIN = 700;
+    private final static Integer LINE_OFFSET = 15;
+    private final static Integer TILE_FONT_SIZE = 18;
+    private final static Integer TEXT_FONT_SIZE = 12;
+    private final static Integer TITLE_MARGIN = 300;
+    private final static Integer TEXT_MARGIN = 100;
+
+
+
     @Override
-    public void createPdf(String text, String outfile) {
+    public void createPdf(ArrayList<String> lines, String outfile) {
+
         try (PDDocument doc = new PDDocument())
         {
             PDPage page = new PDPage();
             doc.addPage(page);
 
-           PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+            PDFont font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
 
             try (PDPageContentStream contents = new PDPageContentStream(doc, page))
             {
                 contents.beginText();
-                contents.setFont(font, 12);
-                contents.newLineAtOffset(100, 700);
-                contents.showText(text);
+                contents.setFont(font, TILE_FONT_SIZE);
+                contents.newLineAtOffset(TITLE_MARGIN, UP_MARGIN);
+
+                Iterator<String> iterator = lines.iterator();
+
+                contents.newLine();
+                contents.showText(iterator.next()); //stampa il titolo
+
+                contents.newLineAtOffset(-TITLE_MARGIN + TEXT_MARGIN, -LINE_OFFSET);  //porta il testo a sinistra
+                contents.setFont(font, TEXT_FONT_SIZE);
+                contents.newLine();
+                contents.showText(iterator.next());
+
+                while (iterator.hasNext()){
+                    contents.newLineAtOffset(0, -LINE_OFFSET);
+                    contents.newLine();
+                    contents.showText(iterator.next());
+
+                }
+
                 contents.endText();
             }
 

@@ -1,23 +1,19 @@
 package it.unisalento.myfood.DAO;
 
+import it.unisalento.myfood.model.*;
 import it.unisalento.myfood.model.Composite.IArticolo;
-import it.unisalento.myfood.model.Composite.Menu;
-import it.unisalento.myfood.model.Ingrediente;
-import it.unisalento.myfood.model.Ordine;
-import it.unisalento.myfood.model.TipologiaProdotto;
-import it.unisalento.myfood.model.Utente;
 
 import java.util.List;
 
 public interface IArticoloDAO {
 
-    List<IArticolo> findProdottoByTipologia(TipologiaProdotto tipologiaProdotto);
+    List<IArticolo> findProdottoByTipologiaProdotto(TipologiaProdotto tipologiaProdotto);
 
-    List<IArticolo> findProdottoByTipologiaContains(TipologiaProdotto tipologiaProdotto, Ingrediente ingrediente);
+    List<IArticolo> findProdottoByTipologie(TipologiaProdotto tipologiaProdotto, TipologiaIngrediente tipologiaIngrediente);
 
     List<IArticolo> findMenu();
 
-    List<IArticolo> findMenuContains(Ingrediente ingrediente);
+    List<IArticolo> findMenuContainsTipologiaIngrediente(TipologiaIngrediente tipologiaIngrediente);
 
     IArticolo findById(Integer idArticolo);
 
@@ -25,7 +21,7 @@ public interface IArticoloDAO {
 
     boolean removeArticolo(IArticolo articolo);
 
-    boolean removeArticoloRecursive(IArticolo articolo);
+    //boolean removeArticoloRecursive(IArticolo articolo);
 
     boolean editArticolo(IArticolo articolo);
 
@@ -41,5 +37,5 @@ public interface IArticoloDAO {
 
     int removeArticoloFromTable(Integer idArticolo, String table);
 
-    public Integer getLastInsertId();
+    Integer getLastInsertId();
 }

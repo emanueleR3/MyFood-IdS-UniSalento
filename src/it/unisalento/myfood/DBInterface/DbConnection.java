@@ -28,7 +28,8 @@ public class DbConnection implements IDbConnection {
 
     public static DbConnection getInstance() {
         try {
-            conn = DriverManager.getConnection("jdbc:mysql://localhost/" + dbUser.getSchemaName() + "?serverTimeZone=UTC", dbUser.getUserName(), dbUser.getPwd());
+            if(conn == null)
+                conn = DriverManager.getConnection("jdbc:mysql://localhost/" + dbUser.getSchemaName() + "?serverTimeZone=UTC", dbUser.getUserName(), dbUser.getPwd());
         } catch (SQLException e) {
             System.out.println("SQL Exception: " + e.getMessage());
             System.out.println("SQL State: " + e.getSQLState());
@@ -57,6 +58,7 @@ public class DbConnection implements IDbConnection {
 
     @Override
     public int executeUpdate(String sqlStatement) {
+        affectedRows = 0;
         try {
             stmt = conn.createStatement();
             affectedRows = stmt.executeUpdate(sqlStatement);
@@ -92,6 +94,18 @@ public class DbConnection implements IDbConnection {
             }
             stmt = null;
         }
+        if (conn != null) {
+            try {
+                conn.close();
+            } catch (SQLException e) {
+                System.out.println("SQL Exception: " + e.getMessage());
+                System.out.println("SQL State: " + e.getSQLState());
+                System.out.println("Vendor Error: " + e.getErrorCode());
+            }
+            conn = null;
+        }
+    }
+    public void closeConnection(){
         if (conn != null) {
             try {
                 conn.close();

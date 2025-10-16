@@ -1,7 +1,5 @@
 package it.unisalento.myfood.View.Decorator.Form;
 
-import it.unisalento.myfood.View.Frame;
-
 import javax.swing.*;
 
 
@@ -13,18 +11,18 @@ public class FormUtente extends Form {
     private JTextField telefono;
     private JTextField dataDiNascita;
     private JTextField professione;
-    private JButton signUp = new JButton("Registrati");
+    private JTextField residenza;
+    private JButton signUp = new JButton("Conferma dati");
     private JButton cancel = new JButton("Annulla");
-    private Frame frame;
 
-    public FormUtente(Frame frame){
-        this.frame = frame;
-        nome = new JTextField();
-        cognome = new JTextField();
-        email = new JTextField();
-        telefono = new JTextField();
-        dataDiNascita = new JTextField();
-        professione = new JTextField();
+    public FormUtente(){
+        nome = new JTextField(20);
+        cognome = new JTextField(20);
+        email = new JTextField(20);
+        telefono = new JTextField(20);
+        dataDiNascita = new JTextField(20);
+        professione = new JTextField(20);
+        residenza = new JTextField(20);
 
         textFields.put("1. Nome", nome);
         textFields.put("2. Cognome", cognome);
@@ -32,6 +30,7 @@ public class FormUtente extends Form {
         textFields.put("4. Telefono", telefono);
         textFields.put("5. Data di nascita", dataDiNascita);
         textFields.put("6. Professione", professione);
+        textFields.put("7. Residenza", residenza);
 
         buttons.add(signUp);
         buttons.add(cancel);

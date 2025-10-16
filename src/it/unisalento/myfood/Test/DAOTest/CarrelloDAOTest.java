@@ -21,10 +21,10 @@ import java.util.ArrayList;
 public class CarrelloDAOTest {
     private Utente cliente;
     private Utente cliente1;
-    private ITipologiaProdottoDAO TDAO = TipologiaProdottoDAO.getInstance();
-    private IArticoloDAO IDAO = ArticoloDAO.getInstance();
-    private IUtenteDAO UDAO = UtenteDAO.getInstance();
-    private ICarrelloDAO CDAO = CarrelloDAO.getInstance();
+    private final ITipologiaProdottoDAO TDAO = TipologiaProdottoDAO.getInstance();
+    private final IArticoloDAO articoloDAO = ArticoloDAO.getInstance();
+    private final IUtenteDAO UDAO = UtenteDAO.getInstance();
+    private final ICarrelloDAO CDAO = CarrelloDAO.getInstance();
     private Prodotto panino;
     private Prodotto cocaCola;
     private Menu menu;
@@ -33,27 +33,27 @@ public class CarrelloDAOTest {
 
     @Before
     public void setUp(){
-        TDAO.addTipologia("Panini");
-        TDAO.addTipologia("Bevande");
-        panTip = TDAO.findTipologiaByName("Panini");
-        bevTip = TDAO.findTipologiaByName("Bevande");
+        TDAO.addTipologia("Tipologia1");
+        TDAO.addTipologia("Tipologia2");
+        panTip = TDAO.findTipologiaByName("Tipologia1");
+        bevTip = TDAO.findTipologiaByName("Tipologia2");
         panino = new Prodotto("Bacon Burger", "bacon croccante [...]", 4.60f, 80, panTip, null, null, null );
 
         ArrayList<IArticolo> prodotti = new ArrayList<>();
-        IDAO.addArticolo(panino);
-        panino.setId(IDAO.getLastInsertId());
+        articoloDAO.addArticolo(panino);
+        panino.setId(articoloDAO.getLastInsertId());
         prodotti.add(panino);
 
         menu = new Menu("Menu large", "gran bel menu!", 80, prodotti, 0.20f, null);
 
         cocaCola = new Prodotto("CocaCola", "bevanda a base di caffeina", 2.5f, 150, bevTip, null, null, null);
 
-        IDAO.addArticolo(cocaCola);
-        cocaCola.setId(IDAO.getLastInsertId());
+        articoloDAO.addArticolo(cocaCola);
+        cocaCola.setId(articoloDAO.getLastInsertId());
 
-        IDAO.addArticolo(menu);
+        articoloDAO.addArticolo(menu);
 
-        menu.setId(IDAO.getLastInsertId());
+        menu.setId(articoloDAO.getLastInsertId());
 
         ArrayList<Ordine> ordini = new ArrayList<>();
         ArrayList<IInterazioneUtente> interazioni = new ArrayList<>();
@@ -80,8 +80,9 @@ public class CarrelloDAOTest {
     public void tearDown(){
         CDAO.emptyCarrello(cliente.getId());
         CDAO.emptyCarrello(cliente1.getId());
-        IDAO.removeArticoloRecursive(menu);
-        IDAO.removeArticolo(cocaCola);
+        articoloDAO.removeArticolo(panino);
+        articoloDAO.removeArticolo(menu);
+        articoloDAO.removeArticolo(cocaCola);
         TDAO.removeTipologia(panTip.getId());
         TDAO.removeTipologia(bevTip.getId());
         UDAO.removeByEmail("valentino@gmail.com");
@@ -98,7 +99,6 @@ public class CarrelloDAOTest {
         Assert.assertEquals(1, (int) carrello.getArticoli().get(cocaCola.getId()));
         Assert.assertEquals(carrello.getArticoli().size(), 2);
 
-        System.out.println(carrello);
 
 
     }
@@ -108,7 +108,6 @@ public class CarrelloDAOTest {
         boolean result = CDAO.addArticoloToCarrello(panino.getId(), 3, cliente1.getId());
         Assert.assertTrue(result);
         Carrello carrello = CDAO.loadCarrelloPerIdUtente(cliente1.getId());
-        System.out.println(carrello);
         Assert.assertEquals(carrello.getArticoli().get(panino.getId()), (Integer) 3);
 
     }
@@ -118,7 +117,6 @@ public class CarrelloDAOTest {
         boolean result = CDAO.removeArticoloFromCarrello(cocaCola.getId(), cliente.getId());
         Assert.assertTrue(result);
         Carrello carrello = CDAO.loadCarrelloPerIdUtente(cliente.getId());
-        System.out.println(carrello);
         Assert.assertNull(carrello.getArticoli().get(cocaCola.getId()));
     }
 
@@ -127,7 +125,6 @@ public class CarrelloDAOTest {
         boolean result = CDAO.setNewQuantita(cliente.getId(), cocaCola.getId(), 3);
         Assert.assertTrue(result);
         Carrello carrello = CDAO.loadCarrelloPerIdUtente(cliente.getId());
-        System.out.println(carrello);
         Assert.assertEquals(carrello.getArticoli().get(cocaCola.getId()), (Integer) 3);
     }
 
@@ -137,10 +134,8 @@ public class CarrelloDAOTest {
         Assert.assertTrue(result);
         Carrello carrello = CDAO.loadCarrelloPerIdUtente(cliente.getId());
         Carrello carrello1 = CDAO.loadCarrelloPerIdUtente(cliente1.getId());
-        System.out.println(carrello);
         Assert.assertNull(carrello.getArticoli().get(cocaCola.getId()));
         Assert.assertNull(carrello1.getArticoli().get(cocaCola.getId()));
-        System.out.println(carrello);
     }
 
     @Test
@@ -148,7 +143,6 @@ public class CarrelloDAOTest {
         boolean result = CDAO.emptyCarrello(cliente.getId());
         Assert.assertTrue(result);
         Carrello carrello = CDAO.loadCarrelloPerIdUtente(cliente.getId());
-        System.out.println(carrello);
         Assert.assertEquals(carrello.getArticoli().size(), 0);
     }
 }

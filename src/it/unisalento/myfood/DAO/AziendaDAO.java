@@ -4,8 +4,6 @@ import it.unisalento.myfood.DBInterface.Command.DbOperationExecutor;
 import it.unisalento.myfood.DBInterface.Command.IDbOperation;
 import it.unisalento.myfood.DBInterface.Command.ReadOperation;
 import it.unisalento.myfood.DBInterface.Command.WriteOperation;
-import it.unisalento.myfood.DBInterface.DbConnection;
-import it.unisalento.myfood.DBInterface.IDbConnection;
 import it.unisalento.myfood.model.Azienda;
 
 import java.sql.ResultSet;
@@ -104,6 +102,32 @@ public class AziendaDAO implements IAziendaDAO {
         }
 
         return azienda;
+    }
+
+    @Override
+    public ArrayList<Azienda> findAll() {
+        ArrayList<Azienda> aziende = null;
+
+        String sql = "SELECT idAzienda FROM Azienda ORDER BY idAzienda ASC;";
+
+        DbOperationExecutor executor = new DbOperationExecutor();
+        IDbOperation readOp = new ReadOperation(sql);
+        ResultSet rs = executor.executeOperation(readOp).getResultSet();
+
+        try {
+            aziende = new ArrayList<>();
+            while (rs.next()) {
+                Azienda azienda = findById(rs.getInt("idAzienda"));
+                aziende.add(azienda);
+            }
+        } catch (SQLException e) {
+            System.out.println("SQL Exception: " + e.getMessage());
+            System.out.println("SQL State: " + e.getSQLState());
+            System.out.println("Vendor Error: " + e.getErrorCode());
+        } catch (NullPointerException e) {
+            System.out.println("Non trovo nessuna tipologia nel database");
+        }
+        return aziende;
     }
 
     @Override

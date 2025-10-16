@@ -4,6 +4,7 @@ import it.unisalento.myfood.Business.UtenteBusiness;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
+import java.text.DecimalFormat;
 
 public class ListaOrdiniTableModel extends AbstractTableModel {
 
@@ -21,12 +22,17 @@ public class ListaOrdiniTableModel extends AbstractTableModel {
         } else if (UtenteBusiness.getInstance().isLoggedCucina()) {
             columnNames = new String[]{"Data", "Stato", "Numero Prodotti"};
         } else if (UtenteBusiness.getInstance().isLoggedAmministratore()) {
-            columnNames = new String[]{"ID cliente", "ID ordine", "Data", "Stato", "Importo"};
+            columnNames = new String[]{"ID ordine", "ID cliente", "Data", "Stato", "Importo"};
         }
 
         this.ordini = ordini;
 
         fireTableStructureChanged();
+    }
+
+    @Override
+    public Class getColumnClass(int columnIndex) {
+        return Object.class;
     }
 
     @Override
@@ -47,8 +53,22 @@ public class ListaOrdiniTableModel extends AbstractTableModel {
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
 
-        if (UtenteBusiness.getInstance().isLoggedCucina())
-            return ordini[rowIndex][columnIndex + 1];   // La cucina non deve vedere l'id
+        DecimalFormat decimalFormat = new DecimalFormat("#0.00");
+
+        if(UtenteBusiness.getInstance().isLoggedCliente()) {
+            if (columnIndex == 2)
+                return "€ " + decimalFormat.format(ordini[rowIndex][3]);
+        }
+
+        if(UtenteBusiness.getInstance().isLoggedAmministratore()) {
+            if (columnIndex == 4)
+                return "€ " + decimalFormat.format(ordini[rowIndex][4]);
+            else
+                return ordini[rowIndex][columnIndex];
+        }
+
+        if (UtenteBusiness.getInstance().isLoggedCucina() || UtenteBusiness.getInstance().isLoggedCliente())
+            return ordini[rowIndex][columnIndex + 1];   // La cucina e il cliente non devono vedere l'id
 
         return null;
     }

@@ -1,9 +1,11 @@
 package it.unisalento.myfood.Business.Decorator.Login;
 
 import it.unisalento.myfood.Business.CarrelloBusiness;
+import it.unisalento.myfood.Business.Security.AbstractFactory.StrategyFactory;
+import it.unisalento.myfood.Business.Security.Strategy.PasswordHashingContext;
 import it.unisalento.myfood.Business.UtenteBusiness;
 import it.unisalento.myfood.DAO.UtenteDAO;
-import it.unisalento.myfood.model.LoginResult;
+import it.unisalento.myfood.model.Result.LoginResult;
 import it.unisalento.myfood.model.Utente;
 
 public class LoginClienteDecorator extends Login{
@@ -19,50 +21,27 @@ public class LoginClienteDecorator extends Login{
 
     @Override
     public LoginResult esegui() {
-
-
         LoginResult loginResult = new LoginResult();
         UtenteDAO utenteDAO = UtenteDAO.getInstance();
 
-        // Lo fa prima
-        /*//1. Controllare se esiste un utente con questa email
-        boolean userExists = utenteDAO.userExists(email);
-        if (!userExists) {
-            loginResult.setLoginResult(LoginResult.LOGIN_RESULT.USER_DOESNT_EXIT);
-            loginResult.setMessage("L'utente non esiste");
+        //1. se l'utente esiste, controlla se la password fornita coincide
+        boolean passwordOk;
+
+        String salt = utenteDAO.findByEmail(email).getSaltHex();
+
+        StrategyFactory strategyFactory = new StrategyFactory();
+
+        PasswordHashingContext passwordHashingContext = new PasswordHashingContext(strategyFactory.getStrategy("SHA512"));
+        String hashedPassword = passwordHashingContext.executeStrategy(password, salt);
+
+        passwordOk = utenteDAO.passwordOk(email, hashedPassword);
+        if (!passwordOk) {
+            loginResult.setLoginResult(LoginResult.LOGIN_RESULT.WRONG_PASSWORD);
+            loginResult.setMessage("Hai sbagliato la password");
             return loginResult;
         }
 
-         */
-
-        //2. se l'utente esiste, controlla se la password fornita coincide
-        // TODO: implementare disabilitazione temporanea e poi definitiva
-        boolean passwordOk;
-        // int remainingAttempts = 5;
-        // while (remainingAttempts > 0) { //TODO: così appena sbaglia la password blocca, bisogna memorizzare remainignAttemps fuori da questo metodo, nel db per ogni utente
-        passwordOk = utenteDAO.passwordOk(email, password);
-        if (!passwordOk) {
-
-            //   remainingAttempts--;
-            loginResult.setLoginResult(LoginResult.LOGIN_RESULT.WRONG_PASSWORD);
-              /*if (remainingAttempts != 0) {
-                     //si hanno ancora dei tentativi
-                   loginResult.setMessage("Hai sbagliato la password. Tentativi rimanenti: " + remainingAttempts);
-                } else {
-                    // se non si hanno più tentativi viene bloccato l'utente
-                    utenteDAO.disableUser(email);
-                    loginResult.setMessage("Hai sbagliato la password. L'utente è stato bloccato");
-                    loginResult.setLoginResult(LoginResult.LOGIN_RESULT.USER_BLOCKED);
-                    return loginResult;
-                }*/
-            loginResult.setMessage("Hai sbagliato la password");
-            return loginResult;
-        } /*else {
-                // la password è giusta
-                break;
-            }*/
-
-        //3. se le credenziali coincidono non sia stato bloccato dall'amministratore
+        //2. se le credenziali coincidono non sia stato bloccato dall'amministratore
         boolean isEnable = utenteDAO.isEnable(email);
         if (!isEnable) {
             loginResult.setLoginResult(LoginResult.LOGIN_RESULT.USER_BLOCKED);
@@ -70,18 +49,18 @@ public class LoginClienteDecorator extends Login{
             return loginResult;
         }
 
-        //4. controlla e carica la tipologia di utente (cliente, ecc)
+        //3. controlla e carica la tipologia di utente (cliente, ecc)
         if (utenteDAO.isCliente(UtenteDAO.getInstance().findByEmail(email).getId())) {
             login.utente = utenteDAO.caricaCliente(email);
-            //loginResult.setMessage("Benvenuto " + u.getNome() + "!");
 
-            //5. salva l'utente in sessione
+
+            //4. salva l'utente in sessione
             login.utente.setRuolo(Utente.RUOLO.CLIENTE);
 
 
-            UtenteBusiness.getSession().put(UtenteBusiness.LOGGED_IN_USER, login.utente);
+            UtenteBusiness.getSession().put(UtenteBusiness.LOGGED_IN_USER_ID, login.utente);
 
-            CarrelloBusiness.getInstance().loadCarrelloToSession();
+            CarrelloBusiness.getInstance().putCarrelloToSession();
 
             return login.esegui();
         }

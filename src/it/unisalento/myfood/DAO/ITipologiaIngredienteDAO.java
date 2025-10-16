@@ -22,5 +22,4 @@ public interface ITipologiaIngredienteDAO {
 
     boolean tipologiaExists(String nome);
 
-    void reloadTipologia();
 }

@@ -34,17 +34,17 @@ public abstract class PopolaDatabase {
 
         // Creo un cliente
         try {
-            utenteBusiness.signUpCliente("emanuele.romano.03@gmail.com", "Emanuele", "Romano", "3331234567", "2003-02-25", "Studente", "Via Enrico Fermi, 8");
+            utenteBusiness.signUpCliente("nome.cognome.03@gmail.com", "Emanuele", "Romano", "3331234567", "25-02-2003", "Studente", "Via Enrico Fermi, 8", false);
         } catch (InvalidFormatException e) {
             e.printStackTrace();
         }
-        Utente utente = utenteDAO.findByEmail("emanuele.romano.03@gmail.com");
+        Utente utente = utenteDAO.findByEmail("nome.cognome.03@gmail.com");
 
         utentiInseriti.add(utente);
 
         //Creo un utente cucina
         try {
-            utenteBusiness.signUpCucina("maildicarlocracco@gmail.com", "Carlo", "Cracco", "3331112347", "1998-02-25", "Cuoco");
+            utenteBusiness.signUpCucina("maildicarlocracco@gmail.com", "Carlo", "Cracco", "3331112347", "25-02-1998", "Cuoco", false);
         } catch (InvalidFormatException e) {
             e.printStackTrace();
         }
@@ -54,11 +54,11 @@ public abstract class PopolaDatabase {
 
         //Creo un utente amministratore
         try {
-            utenteBusiness.signUpAmministratore("andrea.barone@gmail.com", "Andrea", "Barone", "3337654321", "2002-11-24", "Ingegnere");
+            utenteBusiness.signUpAmministratore("nome2.cognome2@gmail.com", "Andrea", "Barone", "3337654321", "24-11-2002", "Ingegnere", false);
         } catch (InvalidFormatException e) {
             e.printStackTrace();
         }
-        utente = utenteDAO.findByEmail("andrea.barone@gmail.com");
+        utente = utenteDAO.findByEmail("nome2.cognome2@gmail.com");
 
         utentiInseriti.add(utente);
 
@@ -79,14 +79,14 @@ public abstract class PopolaDatabase {
      *
      * @return restituisce l'Utente Cliente creato
      */
-    public static Utente creaCliente() {
+    public static Utente creaCliente(boolean isTest) {
         try {
-            utenteBusiness.signUpCliente("emanuele.romano.03@gmail.com", "Emanuele", "Romano", "3331234567", "2003-02-25", "Studente", "Via Enrico Fermi, 8");
+            utenteBusiness.signUpCliente("nome.cognome.03@gmail.com", "Emanuele", "Romano", "3331234567", "25-02-2003", "Studente", "Via Enrico Fermi, 8", isTest);
         } catch (InvalidFormatException e) {
             e.printStackTrace();
         }
 
-        return utenteDAO.findByEmail("emanuele.romano.03@gmail.com");
+        return utenteDAO.findByEmail("nome.cognome.03@gmail.com");
     }
 
     /**
@@ -99,22 +99,22 @@ public abstract class PopolaDatabase {
 
     public static Utente creaCucina() {
         try {
-            utenteBusiness.signUpCucina("emanuele.romano@liceobanzi.edu.it", "Carlo", "Cracco", "3331234567", "2003-02-25", "Cuoco");
+            utenteBusiness.signUpCucina("nome.cognome@liceobanzi.edu.it", "Carlo", "Cracco", "3331234567", "25-02-2003", "Cuoco", false);
         } catch (InvalidFormatException e) {
             e.printStackTrace();
         }
 
-        return utenteDAO.findByEmail("emanuele.romano2@studenti.unisalento.it");
+        return utenteDAO.findByEmail("nome.cognome@liceobanzi.edu.it");
     }
 
     public static Utente creaAmministratore() {
         try {
-            utenteBusiness.signUpAmministratore("emanuele.romano2@studenti.unisalento.it", "Emanuele", "Romano", "3331234566", "2003-02-25", "Ingegnere");
+            utenteBusiness.signUpAmministratore("nome.cognome2@studenti.unisalento.it", "Emanuele", "Romano", "3331234566", "25-02-2003", "Ingegnere", false);
         } catch (InvalidFormatException e) {
             e.printStackTrace();
         }
 
-        return utenteDAO.findByEmail("emanuele.romano2@studenti.unisalento.it");
+        return utenteDAO.findByEmail("nome.cognome2@studenti.unisalento.it");
     }
 
     // TABELLA ORDINE
@@ -268,6 +268,6 @@ public abstract class PopolaDatabase {
     }
 
     public static void eliminaMenu(Menu menu) {
-        articoloDAO.removeArticoloRecursive(menu);
+        articoloDAO.removeArticolo(menu);
     }
 }

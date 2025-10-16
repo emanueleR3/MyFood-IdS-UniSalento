@@ -1,6 +1,6 @@
 package it.unisalento.myfood.Business.AbstractFactory;
 
-import it.unisalento.myfood.model.IResult;
+import it.unisalento.myfood.model.Result.IResult;
 
 public interface IResultFactory {
 

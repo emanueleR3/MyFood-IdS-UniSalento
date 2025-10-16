@@ -7,8 +7,9 @@ import it.unisalento.myfood.Business.InvalidFormatException;
 import it.unisalento.myfood.Business.Security.AbstractFactory.StrategyFactory;
 import it.unisalento.myfood.Business.Security.Strategy.PasswordHashingContext;
 import it.unisalento.myfood.Business.Security.Strategy.SHA512Hashing;
+import it.unisalento.myfood.Business.UtenteBusiness;
 import it.unisalento.myfood.DAO.UtenteDAO;
-import it.unisalento.myfood.model.SignUpResult;
+import it.unisalento.myfood.model.Result.SignUpResult;
 import it.unisalento.myfood.model.Utente;
 
 import java.security.SecureRandom;
@@ -31,14 +32,16 @@ public class SignUpUtente extends SignUp{
     private String dataDiNascitaString;
     private String professione;
     private IResultFactory resultFactory;
+    private Boolean isTest;
 
-    public SignUpUtente (String email, String nome, String cognome, String telefono, String dataDiNascitaString, String professione){
+    public SignUpUtente (String email, String nome, String cognome, String telefono, String dataDiNascitaString, String professione, Boolean isTest){
         this.email = email;
         this.nome = nome;
         this.cognome = cognome;
         this.telefono = telefono;
         this.dataDiNascitaString = dataDiNascitaString;
         this.professione = professione;
+        this.isTest = isTest;
         utente = new Utente();
         resultFactory = new ResultFactory("SignUp");
     }
@@ -76,12 +79,19 @@ public class SignUpUtente extends SignUp{
         if(email.isEmpty() || nome.isEmpty() || cognome.isEmpty() || telefono.isEmpty() || professione.isEmpty())
             throw new InvalidFormatException("Uno o più campi vuoti");
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        try {
+            checkData();
+        } catch (InvalidFormatException e) {
+            throw new InvalidFormatException("Formato data non valido\nSi prega di inserire gg-mm-aaaa");
+        }
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
         try {
             dataDiNascita = new Date(dateFormat.parse(dataDiNascitaString).getTime());
         } catch (ParseException e) {
-            throw new InvalidFormatException("Formato data non valido");
+            throw new InvalidFormatException("Formato data non valido\nSi prega di inserire gg-mm-aaaa");
         }
+
         //espressione regolare email
         String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
 
@@ -97,7 +107,15 @@ public class SignUpUtente extends SignUp{
         if(!telefono.matches("\\d+"))//espressione regolare valore numerici
             throw new InvalidFormatException("Formato telefono non valido");
 
+
         if (utenteDAO.userExists(email)) {
+            if (UtenteBusiness.EMAIL_CLIENTE_UNIVERSALE.equals(email)) {
+                signUpResult.setSignUpResult(SignUpResult.SIGN_UP_RESULT.USED_EMAIL_IS_RESERVED);
+                signUpResult.setMessage("Questa mail è riservata alla gestione del sistema!");
+
+                return signUpResult;
+            }
+
             signUpResult.setSignUpResult(SignUpResult.SIGN_UP_RESULT.USER_ALREADY_EXISTS);
             signUpResult.setMessage("Esiste già un utente con questa e-mail: " + email);
 
@@ -125,7 +143,6 @@ public class SignUpUtente extends SignUp{
         utente.setSaltHex(salt);
 
         String firstPassword = generateFirstPassword();
-        System.out.println(firstPassword);  //Lo lasciamo per comodità
 
         StrategyFactory strategyFactory = new StrategyFactory();
 
@@ -136,7 +153,8 @@ public class SignUpUtente extends SignUp{
 
 
         boolean done = utenteDAO.addUtente(utente);
-        if (done) {
+
+        if (done && !isTest) {
             signUpResult.setSignUpResult(SignUpResult.SIGN_UP_RESULT.SIGNED_UP_SUCCESFULLY);
             signUpResult.setMessage("Cliente registrato con successso!");
 
@@ -148,5 +166,38 @@ public class SignUpUtente extends SignUp{
         }
 
         return signUpResult;
+    }
+
+    private void checkData() throws InvalidFormatException {
+        // Verifica se la lunghezza della stringa è corretta
+        if (dataDiNascitaString.length() != 10) {
+            throw new InvalidFormatException("Formato data non valido\nSi prega di inserire gg-mm-aaaa");
+        }
+
+        // Verifica se i caratteri ai posti giusti sono "-"
+        if (dataDiNascitaString.charAt(2) != '-' || dataDiNascitaString.charAt(5) != '-') {
+            throw new InvalidFormatException("Formato data non valido\nSi prega di inserire gg-mm-aaaa");
+        }
+
+        // Dividi la stringa in parti giorno, mese e anno
+        String[] partiData = dataDiNascitaString.split("-");
+        if (partiData.length != 3) {
+            throw new InvalidFormatException("Formato data non valido\nSi prega di inserire gg-mm-aaaa");
+        }
+
+        // Verifica se le parti giorno, mese e anno sono numeriche
+        try {
+            int giorno = Integer.parseInt(partiData[0]);
+            int mese = Integer.parseInt(partiData[1]);
+            int anno = Integer.parseInt(partiData[2]);
+
+            // Verifica se il giorno, il mese e l'anno sono nei range corretti
+            if (giorno < 1 || giorno > 31 || mese < 1 || mese > 12 || anno < 1000) {
+                throw new InvalidFormatException("Formato data non valido\nSi prega di inserire gg-mm-aaaa");
+            }
+
+        } catch (NumberFormatException e) {
+            throw new InvalidFormatException("Formato data non valido\nSi prega di inserire gg-mm-aaaa");
+        }
     }
 }

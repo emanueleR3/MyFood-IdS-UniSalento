@@ -31,14 +31,9 @@ public class Menu implements IArticolo {
         this.commenti = commenti;
     }
 
-    //TODO: lo sconto presente sulla traccia è opportuno considerarlo come una questione di view, modificabile dall'amministratore dall'interfaccia grafica
-
-    // TODO: va nel business secondo me un controllo del genere --> nell'AbstractFactory, non nel model
     public void add(IArticolo articolo) {
         if(articolo instanceof Prodotto) {
             articoli.add(articolo);
-            // TODO: controllo su cosa stai aggiungendo
-            return;
         } else {
             Menu menu = (Menu) articolo;
             for(IArticolo a : menu.getArticoli()) {
@@ -49,8 +44,6 @@ public class Menu implements IArticolo {
             articoli.add(articolo);
         }
     }
-
-
 
     public ArrayList<IArticolo> getArticoli() {
         return articoli;

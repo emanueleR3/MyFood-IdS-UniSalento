@@ -1,25 +1,22 @@
 package it.unisalento.myfood.View.Decorator.Form;
 
-import it.unisalento.myfood.View.Frame;
-import it.unisalento.myfood.View.Listener.ClienteSignUpListener;
+import it.unisalento.myfood.Listener.SignUp.ClienteSignUpListener;
 
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.TreeMap;
 
-public class FormClienteDecorator extends FormDecorator {  //viene mostrato quando si registra il guest
+public class FormClienteDecorator extends FormDecorator {  //registrazione autonoma cliente
 
     private JTextField residenza;
-    private Frame frame;
 
-    public FormClienteDecorator(Form form, Frame frame) {
+    public FormClienteDecorator(Form form) {
         this.form = form;
-        this.frame = frame;
+
+        this.form.getTextFields().get("7. Residenza").setVisible(true);
 
         textFields.putAll(this.form.getTextFields());
 
-        residenza = new JTextField();
-        textFields.put("7. Residenza", residenza);
     }
 
     @Override
@@ -30,9 +27,6 @@ public class FormClienteDecorator extends FormDecorator {  //viene mostrato quan
     public ArrayList<JButton> getButtons(){
         buttons.addAll(this.form.getButtons());
 
-/*
-        ((FormUtente) form).getSignUp().addActionListener(signUpListener);
-        ((FormUtente) form).getCancel().addActionListener(signUpListener);*/
         ((FormUtente) form).getSignUp().setActionCommand(ClienteSignUpListener.SIGNUP_BTN);
         ((FormUtente) form).getCancel().setActionCommand(ClienteSignUpListener.CANCEL_BTN);
 

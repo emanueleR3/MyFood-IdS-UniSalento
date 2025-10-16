@@ -4,9 +4,6 @@ import it.unisalento.myfood.DBInterface.Command.DbOperationExecutor;
 import it.unisalento.myfood.DBInterface.Command.IDbOperation;
 import it.unisalento.myfood.DBInterface.Command.ReadOperation;
 import it.unisalento.myfood.DBInterface.Command.WriteOperation;
-import it.unisalento.myfood.DBInterface.DbConnection;
-import it.unisalento.myfood.DBInterface.IDbConnection;
-import it.unisalento.myfood.model.Composite.IArticolo;
 import it.unisalento.myfood.model.TipologiaIngrediente;
 
 import java.sql.ResultSet;
@@ -106,7 +103,6 @@ public class TipologiaIngredienteDAO implements ITipologiaIngredienteDAO {
         IDbOperation writeOp = new WriteOperation(sql);
         rowsAffected = executor.executeOperation(writeOp).getRowsAffected();
 
-        reloadTipologia();
 
         return rowsAffected > 0;
     }
@@ -123,7 +119,7 @@ public class TipologiaIngredienteDAO implements ITipologiaIngredienteDAO {
         IDbOperation writeOp = new WriteOperation(sql);
         rowsAffected = executor.executeOperation(writeOp).getRowsAffected();
 
-        reloadTipologia();
+
         return rowsAffected > 0;
     }
 
@@ -139,10 +135,8 @@ public class TipologiaIngredienteDAO implements ITipologiaIngredienteDAO {
         IDbOperation writeOp = new WriteOperation(sql);
         rowsAffected = executor.executeOperation(writeOp).getRowsAffected();
 
-        // TODO: cosa fa?
-        reloadTipologia();
-
         return rowsAffected == 1;
+
     }
 
     @Override
@@ -150,7 +144,7 @@ public class TipologiaIngredienteDAO implements ITipologiaIngredienteDAO {
 
         ArrayList<TipologiaIngrediente> tipologie = new ArrayList<>();
 
-        String sql = "SELECT * FROM TipologiaIngrediente;";
+        String sql = "SELECT * FROM TipologiaIngrediente ORDER BY idTipologiaIngrediente ASC;";
 
         DbOperationExecutor executor = new DbOperationExecutor();
         IDbOperation readOp = new ReadOperation(sql);
@@ -202,10 +196,4 @@ public class TipologiaIngredienteDAO implements ITipologiaIngredienteDAO {
         return null;
     }
 
-
-    @Override
-    public void reloadTipologia() {
-       // IArticolo.tipologiaIngrediente.clear();
-      //  IArticolo.tipologiaIngrediente.addAll(loadTipologia());
-    }
 }

@@ -8,7 +8,6 @@ public class CarrelloTableModel extends AbstractTableModel {
 
     private Object[][] articoli;
     private String[] columnNames = {"Copertina", "Articolo", "Descrizione", "Prezzo", "Quantità"};
-    private Float total;
 
 
     public CarrelloTableModel(Object[][] articoli) {
@@ -18,17 +17,6 @@ public class CarrelloTableModel extends AbstractTableModel {
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
         return false;    // tutte le celle non sono editabili così
-    }
-
-    @Override
-    public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
-
-        //TODO
-
-       /* switch (columnIndex) {
-            case 3: p.setPrezzo(Float.valueOf(aValue.toString()));  //mettere try - catch NumberFormatException
-                                                                    // mettere fino alla seconda decimale
-        }*/
     }
 
     @Override   // per modificare le intestazioni delle colonne

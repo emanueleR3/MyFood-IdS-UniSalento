@@ -4,14 +4,13 @@ import it.unisalento.myfood.DBInterface.Command.DbOperationExecutor;
 import it.unisalento.myfood.DBInterface.Command.IDbOperation;
 import it.unisalento.myfood.DBInterface.Command.ReadOperation;
 import it.unisalento.myfood.DBInterface.Command.WriteOperation;
-import it.unisalento.myfood.DBInterface.DbConnection;
-import it.unisalento.myfood.DBInterface.IDbConnection;
 import it.unisalento.myfood.model.Azienda;
 import it.unisalento.myfood.model.Ingrediente;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class IngredienteDAO implements IIngredienteDAO {
 
@@ -177,6 +176,36 @@ public class IngredienteDAO implements IIngredienteDAO {
     }
 
     @Override
+    public ArrayList<Ingrediente> findIngredientePerTipologia(String filtroTipologia) {
+        Integer idTipologia = TipologiaIngredienteDAO.getInstance().findTipologiaByNome(filtroTipologia).getId();
+
+        ArrayList<Ingrediente> ingredienti;
+
+        String sql = "SELECT idIngrediente FROM Ingrediente WHERE TipologiaIngrediente_idTipologiaIngrediente = " + idTipologia + ";";
+
+        DbOperationExecutor executor = new DbOperationExecutor();
+        IDbOperation readOp = new ReadOperation(sql);
+        ResultSet rs = executor.executeOperation(readOp).getResultSet();
+
+        try {
+            ingredienti = new ArrayList<>();
+            while (rs.next()) {
+                Ingrediente ingrediente = findIngredienteById(rs.getInt("idIngrediente"));
+                ingredienti.add(ingrediente);
+            }
+            return ingredienti;
+        } catch (SQLException e) {
+            System.out.println("SQL Exception: " + e.getMessage());
+            System.out.println("SQL State: " + e.getSQLState());
+            System.out.println("Vendor Error: " + e.getErrorCode());
+        } catch (NullPointerException e) {
+            System.out.println("Non trovo nessun ingrediente");
+        }
+
+        return null;
+    }
+
+    @Override
     public boolean addIngrediente(Ingrediente ingrediente) {
         DbOperationExecutor executor = new DbOperationExecutor();
         String sql = "INSERT INTO Ingrediente (nome, TipologiaIngrediente_idTipologiaIngrediente, Azienda_idProduttore) VALUES ('" + ingrediente.getNome() + "', " + ingrediente.getTipologiaIngrediente().getId() + ", " + ingrediente.getProduttore().getId() + ");";
@@ -187,7 +216,6 @@ public class IngredienteDAO implements IIngredienteDAO {
         if(distributori != null){
             for(Azienda a : distributori){
                 sql = "INSERT INTO Ingrediente_has_Distributore (Ingrediente_idIngrediente, Azienda_idAzienda) VALUES (" + getLastInsertId() + ", " + a.getId() + ");";
-
 
                 writeOp = new WriteOperation(sql);
                 rowsAffected += executor.executeOperation(writeOp).getRowsAffected();
@@ -269,7 +297,14 @@ public class IngredienteDAO implements IIngredienteDAO {
         IDbOperation writeOp = new WriteOperation(sql);
         int rowsAffected = executor.executeOperation(writeOp).getRowsAffected();
 
-        return rowsAffected == 1;
+        if(ingrediente.getDistributori() != null){
+            Iterator<Azienda> iterator = ingrediente.getDistributori().iterator();
+            while (iterator.hasNext())
+                addDistributoreToIngrediente(ingrediente.getId(), iterator.next().getId());
+
+        }
+
+        return rowsAffected > 0;
     }
 
     @Override
@@ -284,7 +319,7 @@ public class IngredienteDAO implements IIngredienteDAO {
         try {
             while (rs.next()) {
                 if (rs.getInt("C") == 1) {
-                    System.out.println("Il distributore che si vuole aggiungere è già esistente");
+                  //  System.out.println("Il distributore che si vuole aggiungere è già esistente");
                     return true;    // restituisce true perché comunque il distributore esiste già
                 }
             }

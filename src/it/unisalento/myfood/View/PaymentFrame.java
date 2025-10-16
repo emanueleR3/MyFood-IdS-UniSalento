@@ -1,6 +1,6 @@
 package it.unisalento.myfood.View;
 
-import it.unisalento.myfood.View.Listener.PaymentFrameListener;
+import it.unisalento.myfood.Listener.PaymentFrameListener;
 
 import javax.swing.*;
 import java.awt.*;
@@ -8,7 +8,11 @@ import java.awt.*;
 public class PaymentFrame extends JFrame {
 
     private PaymentFrameListener paymentFrameListener;
-   public PaymentFrame(){
+    private Integer idOrdineCraeto;
+
+   public PaymentFrame(Integer idOrdineCraeto){
+       this.idOrdineCraeto = idOrdineCraeto;
+
        setTitle("Cassa");
 
        paymentFrameListener = new PaymentFrameListener(this);
@@ -24,11 +28,14 @@ public class PaymentFrame extends JFrame {
 
        add(cassaPan);
 
+       setResizable(false);
        setVisible(true);
 
        cassa.addActionListener(paymentFrameListener);
        cassa.setActionCommand(PaymentFrameListener.CASSA_BTN);
+    }
 
-
+    public Integer getIdOrdineCraeto() {
+        return idOrdineCraeto;
     }
 }

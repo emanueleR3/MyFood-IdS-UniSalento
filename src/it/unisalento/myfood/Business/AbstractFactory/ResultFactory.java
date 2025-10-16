@@ -1,6 +1,6 @@
 package it.unisalento.myfood.Business.AbstractFactory;
 
-import it.unisalento.myfood.model.IResult;
+import it.unisalento.myfood.model.Result.IResult;
 
 public class ResultFactory implements IResultFactory {
 
@@ -13,7 +13,7 @@ public class ResultFactory implements IResultFactory {
     @Override
     public IResult crea() {
         try{
-            Class cls = Class.forName("it.unisalento.myfood.model." + resultType + "Result");
+            Class cls = Class.forName("it.unisalento.myfood.model.Result." + resultType + "Result");
             Object obj = cls.getConstructor().newInstance();
             return (IResult) obj;
         } catch (Exception e){

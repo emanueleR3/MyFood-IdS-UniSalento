@@ -1,13 +1,10 @@
 package it.unisalento.myfood.DAO;
 
-import it.unisalento.myfood.Business.Security.AbstractFactory.StrategyFactory;
-import it.unisalento.myfood.Business.Security.Strategy.PasswordHashingContext;
-import it.unisalento.myfood.Business.Security.Strategy.SHA512Hashing;
 import it.unisalento.myfood.DBInterface.Command.DbOperationExecutor;
 import it.unisalento.myfood.DBInterface.Command.IDbOperation;
 import it.unisalento.myfood.DBInterface.Command.ReadOperation;
 import it.unisalento.myfood.DBInterface.Command.WriteOperation;
-
+import it.unisalento.myfood.DBInterface.DbConnection;
 import it.unisalento.myfood.model.Composite.IArticolo;
 import it.unisalento.myfood.model.Utente;
 
@@ -17,11 +14,8 @@ import java.util.ArrayList;
 
 public class UtenteDAO implements IUtenteDAO {
     private static UtenteDAO instance = new UtenteDAO();
-    private Utente utente;
 
-    private UtenteDAO() {
-        utente = null;
-    }
+    private UtenteDAO() {}
 
     public static UtenteDAO getInstance() {
         return instance;
@@ -30,6 +24,7 @@ public class UtenteDAO implements IUtenteDAO {
 
     @Override
     public Integer getLastInsertId(){
+
         int lastInsertId = 1;
         String sql = "SELECT MAX(idUtente) as max " +
                 "FROM Utente;";
@@ -49,6 +44,7 @@ public class UtenteDAO implements IUtenteDAO {
 
     @Override
     public boolean userExists(String email) {
+
         boolean userExists = false;
 
         DbOperationExecutor executor = new DbOperationExecutor();
@@ -72,16 +68,9 @@ public class UtenteDAO implements IUtenteDAO {
     }
 
     @Override
-    public boolean passwordOk(String email, String password) {
+    public boolean passwordOk(String email, String hashedPassword) {
+
         boolean passwordOk = false;
-
-        String salt = findByEmail(email).getSaltHex();
-
-        StrategyFactory strategyFactory = new StrategyFactory();
-
-        //TODO: spostare nel business: il dao usa il business
-        PasswordHashingContext passwordHashingContext = new PasswordHashingContext(strategyFactory.getStrategy("SHA512"));
-        String hashedPassword = passwordHashingContext.executeStrategy(password, salt);
 
         DbOperationExecutor executor = new DbOperationExecutor();
         String sql = "SELECT COUNT(*) AS C FROM Utente AS U WHERE U.email = '" + email + "' " +
@@ -106,6 +95,7 @@ public class UtenteDAO implements IUtenteDAO {
 
     @Override
     public boolean isCliente(Integer id) {
+
         boolean isCliente = false;
 
         DbOperationExecutor executor = new DbOperationExecutor();
@@ -158,6 +148,7 @@ public class UtenteDAO implements IUtenteDAO {
 
     @Override
     public boolean isCucina(Integer id) {
+
         boolean isCucina = false;
 
         DbOperationExecutor executor = new DbOperationExecutor();
@@ -184,6 +175,7 @@ public class UtenteDAO implements IUtenteDAO {
 
     @Override
     public boolean isEnable(String email) {
+
         boolean isEnable = true;
 
         String sql = "SELECT disabilitato FROM Cliente AS C " +
@@ -222,11 +214,13 @@ public class UtenteDAO implements IUtenteDAO {
 
         u.setRuolo(Utente.RUOLO.CLIENTE);
         u.setOrdini(OrdineDAO.getInstance().findByCliente(u.getId()));
+
         return u;
     }
 
     @Override
     public Utente caricaAmministratore(String email) {
+
         String sql = "SELECT Utente_idUtente FROM Amministratore AS A INNER JOIN Utente AS U ON A.Utente_idUtente = U.idUtente WHERE email = '" + email + "'" ;
         DbOperationExecutor executor = new DbOperationExecutor();
 
@@ -247,12 +241,12 @@ public class UtenteDAO implements IUtenteDAO {
         } catch (NullPointerException e) {
             System.out.println("Non trovo questo amministratore nel database");
         }
-
         return null;
     }
 
     @Override
     public Utente caricaCucina(String email) {
+
         String sql = "SELECT Utente_idUtente FROM Cucina AS C INNER JOIN Utente AS U ON C.Utente_idUtente = U.idUtente WHERE email = '" + email + "'" ;
         DbOperationExecutor executor = new DbOperationExecutor();
 
@@ -281,6 +275,7 @@ public class UtenteDAO implements IUtenteDAO {
 
     @Override
     public Utente findByEmail(String email) {
+
         DbOperationExecutor executor = new DbOperationExecutor();
         String sql = "SELECT idUtente FROM Utente WHERE email = '" + email + "';";
 
@@ -290,8 +285,7 @@ public class UtenteDAO implements IUtenteDAO {
         try {
             rs.next();
             if (rs.getRow() == 1) {
-                utente = findById(rs.getInt("idUtente"));
-                return utente;
+                return findById(rs.getInt("idUtente"));
             }
         } catch (SQLException e) {
             System.out.println("SQL Exception: " + e.getMessage());
@@ -305,6 +299,7 @@ public class UtenteDAO implements IUtenteDAO {
 
     @Override
     public Utente findById(Integer id) {
+
         DbOperationExecutor executor = new DbOperationExecutor();
         String sql = "SELECT * FROM Utente WHERE idUtente = " + id + ";";
 
@@ -313,7 +308,7 @@ public class UtenteDAO implements IUtenteDAO {
         try {
             rs.next();
             if (rs.getRow() == 1) {
-                utente = new Utente();
+                Utente utente = new Utente();
 
                 utente.setId(id);
                 utente.setNome(rs.getString("nome"));
@@ -327,7 +322,7 @@ public class UtenteDAO implements IUtenteDAO {
                 utente.setCambiaPassword(rs.getInt("cambiaPassword") == 1);
 
                 byte[] saltBytes = rs.getBytes("salt");
-                String saltHex = SHA512Hashing.bytesToHex(saltBytes);
+                String saltHex = bytesToHex(saltBytes);
                 utente.setSaltHex(saltHex);
 
                 if(isCliente(id)){
@@ -340,6 +335,7 @@ public class UtenteDAO implements IUtenteDAO {
                     utente.setResidenza(rs.getString("residenza"));
                     utente.setRuolo(Utente.RUOLO.CLIENTE);
                     utente.setInterazioni(InterazioneUtenteDAO.getInstance().caricaInterazioni(utente));
+                    utente.setOrdini(OrdineDAO.getInstance().findByCliente(id));
                 } else if(isCucina(id)){
                     utente.setRuolo(Utente.RUOLO.CUCINA);
                     utente.setInterazioni(InterazioneUtenteDAO.getInstance().caricaInterazioni(utente));
@@ -357,11 +353,13 @@ public class UtenteDAO implements IUtenteDAO {
         } catch (NullPointerException e) {
             System.out.println("Non trovo nessun utente con id = " + id);
         }
+
         return null;
     }
 
     @Override
     public ArrayList<Utente> findAll() {
+
         DbOperationExecutor executor = new DbOperationExecutor();
         String sql = "SELECT email FROM Utente;";
         IDbOperation readOp = new ReadOperation(sql);
@@ -387,6 +385,7 @@ public class UtenteDAO implements IUtenteDAO {
 
     @Override
     public ArrayList<Utente> findAllClienti() {
+
         DbOperationExecutor executor = new DbOperationExecutor();
         String sql = "SELECT Utente_idUtente FROM cliente;";
         IDbOperation readOp = new ReadOperation(sql);
@@ -410,6 +409,7 @@ public class UtenteDAO implements IUtenteDAO {
 
     @Override
     public ArrayList<Utente> findAllCucina() {
+
         DbOperationExecutor executor = new DbOperationExecutor();
         String sql = "SELECT Utente_idUtente FROM cucina;";
         IDbOperation readOp = new ReadOperation(sql);
@@ -456,6 +456,7 @@ public class UtenteDAO implements IUtenteDAO {
 
     @Override
     public boolean saltExists(String salt) {
+
         String sql = "SELECT COUNT(*) AS C FROM utente WHERE salt = UNHEX('" + salt + "');";
 
         DbOperationExecutor executor = new DbOperationExecutor();
@@ -480,6 +481,7 @@ public class UtenteDAO implements IUtenteDAO {
 
     @Override
     public boolean addUtente(Utente utente) {
+
         if(utente.getRuolo() == Utente.RUOLO.GUEST){
             return false;
         }
@@ -515,6 +517,7 @@ public class UtenteDAO implements IUtenteDAO {
 
     @Override
     public boolean update(Utente utente) {
+
         DbOperationExecutor executor = new DbOperationExecutor();
         String sql = "UPDATE utente " +
                 "SET nome = '" + utente.getNome() + "', cognome = '" + utente.getCognome() + "', password = '" + utente.getHashedPassword() + "', email = '" + utente.getEmail() + "', dataRegistrazione = '" + utente.getDataRegistrazione().toString() + "', telefono = '" + utente.getTelefono() + "', dataDiNascita = '" + utente.getDataNascita().toString() + "', professione = '" + utente.getProfessione() + "', cambiaPassword = " + (utente.isCambiaPassword()? 1 : 0) +
@@ -538,20 +541,25 @@ public class UtenteDAO implements IUtenteDAO {
 
     @Override
     public boolean removeByEmail(String email) {
+
         DbOperationExecutor executor = new DbOperationExecutor();
         String sql;
         IDbOperation writeOp;
         Integer id = findByEmail(email).getId();
 
-        CarrelloDAO.getInstance().emptyCarrello(id);
-        // TODO rimuovere anche dalla tabella Ordine --> rimuovere ordine ?
-
         int rowsAffected = 0;
         if(isCliente(id)){
+            CarrelloDAO.getInstance().emptyCarrello(id);
+
             sql = "DELETE FROM Cliente WHERE Utente_idUtente = " + id + ";";
             writeOp = new WriteOperation(sql);
             rowsAffected = executor.executeOperation(writeOp).getRowsAffected();
         } else if(isAmministratore(id)){
+            // Rimuove tutte le risposte dell'amministratore
+            boolean done = InterazioneUtenteDAO.getInstance().removeRispostePerAmministratore(id);
+            if (!done)
+                System.out.println("ERRORE! Risposte non eliminate!");
+
             sql = "DELETE FROM Amministratore WHERE Utente_idUtente = " + id + ";";
             writeOp = new WriteOperation(sql);
             rowsAffected = executor.executeOperation(writeOp).getRowsAffected();
@@ -571,6 +579,7 @@ public class UtenteDAO implements IUtenteDAO {
 
     @Override
     public boolean checkIfUtenteHasPurchasedArticolo(Utente utente, IArticolo articolo) {
+
         DbOperationExecutor executor = new DbOperationExecutor();
 
         String sql = "SELECT COUNT(*) AS C FROM Ordine AS O " +
@@ -600,6 +609,7 @@ public class UtenteDAO implements IUtenteDAO {
 
     @Override
     public boolean checkIfUtenteHasCommentedArticolo(Utente utente, IArticolo articolo) {
+
         DbOperationExecutor executor = new DbOperationExecutor();
 
         String sql = "SELECT COUNT(*) AS C FROM Commento " +
@@ -627,6 +637,7 @@ public class UtenteDAO implements IUtenteDAO {
 
     @Override
     public boolean isFirstAccess(String email) {
+
         DbOperationExecutor executor = new DbOperationExecutor();
 
         String sql = "SELECT cambiaPassword FROM utente WHERE email = '" + email + "';";
@@ -683,6 +694,15 @@ public class UtenteDAO implements IUtenteDAO {
         IDbOperation writeOp = new WriteOperation(sql);
         int rowsAffected = executor.executeOperation(writeOp).getRowsAffected();
 
+
         return rowsAffected == 1;
+    }
+
+    private static String bytesToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
     }
 }

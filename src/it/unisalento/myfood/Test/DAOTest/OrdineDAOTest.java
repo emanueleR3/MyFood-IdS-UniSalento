@@ -119,7 +119,8 @@ public class OrdineDAOTest {
       ordineDAO.remove(ordine);
       ordineDAO.remove(ordine1);
       ordineDAO.remove(ordine2);
-      articoloDAO.removeArticoloRecursive(menu);
+      articoloDAO.removeArticolo(menu);
+      articoloDAO.removeArticolo(panino);
       articoloDAO.removeArticolo(cocaCola);
       tipologiaProdottoDAO.removeTipologia(panTip.getId());
       tipologiaProdottoDAO.removeTipologia(bevTip.getId());
@@ -128,8 +129,19 @@ public class OrdineDAOTest {
    }
 
    @Test
-   public void getLastInsertId() {
-      Assert.assertEquals(ordine2.getIdOrdine(), ordineDAO.getLastInsertId());
+   public void getLastInsertIdTest() {
+      Assert.assertEquals(cliente1.getId(), ordine2.getIdCliente());
+   }
+
+   @Test
+   public void updateOrdineTest() {
+      ordine2.setStato(IOrdine.STATO.CONSEGNATO);
+      ordine2.setIdCliente(cliente.getId());
+
+      ordineDAO.updateOrdine(ordine2);
+
+      Assert.assertEquals(IOrdine.STATO.CONSEGNATO, ordine2.getStato());
+      Assert.assertEquals(cliente.getId(), ordine2.getIdCliente());
    }
 
    @Test
@@ -140,14 +152,57 @@ public class OrdineDAOTest {
 
       Assert.assertEquals(ordineTest.getIdOrdine(), ordine1.getIdOrdine());
       Assert.assertEquals(ordineTest.getArticoli(), ordine1.getArticoli());
-      Assert.assertEquals(ordineTest.getCliente().getId(), ordine1.getCliente().getId());
+      Assert.assertEquals(ordineTest.getIdCliente(), ordine1.getIdCliente());
       Assert.assertEquals(ordineTest.getData(), ordine1.getData());
       Assert.assertEquals(ordineTest.getStato(), ordine1.getStato());
       Assert.assertEquals(ordineTest.getImporto(), ordine1.getImporto());
    }
 
    @Test
-   public void findByState() {
+   public void findByClienteAndStateTest() {
+
+      ordine1.setStato(IOrdine.STATO.PAGATO);
+      ordine2.setStato(IOrdine.STATO.PAGATO);
+      ArrayList<Ordine> ordini = ordineDAO.findByClienteAndState(cliente.getId(), IOrdine.STATO.NON_PAGATO);
+
+      Assert.assertNotNull(ordini);
+      Assert.assertEquals(ordini.size(), 1);
+      Assert.assertEquals(ordini.get(0).getIdOrdine(), ordine.getIdOrdine());
+
+      ordini = ordineDAO.findByClienteAndState(cliente1.getId(), IOrdine.STATO.NON_PAGATO);
+
+
+      Assert.assertNotNull(ordini);
+      Assert.assertEquals(ordini.size(), 1);
+      Assert.assertEquals(ordini.get(0).getIdOrdine(), ordine1.getIdOrdine());
+
+      ordini = ordineDAO.findByClienteAndState(cliente1.getId(), IOrdine.STATO.PAGATO);
+      Assert.assertEquals(ordini.size(), 1);
+      Assert.assertEquals(ordini.get(0).getIdOrdine(), ordine2.getIdOrdine());
+
+
+
+   }
+
+   @Test
+   public void findAllTest() {
+      ArrayList<Ordine> ordini = ordineDAO.findAll();
+
+       for (Ordine ordine : ordini) {
+           Assert.assertNotNull(ordine);
+           Assert.assertNotNull(ordine.getIdOrdine());
+       }
+
+      Assert.assertEquals(ordini.size(), 3);
+
+      Assert.assertEquals(ordine.getIdOrdine(), ordini.get(0).getIdOrdine());
+      Assert.assertEquals(ordine1.getIdOrdine(), ordini.get(1).getIdOrdine());
+      Assert.assertEquals(ordine2.getIdOrdine(), ordini.get(2).getIdOrdine());
+
+   }
+
+   @Test
+   public void findByStateTest() {
       ArrayList<Ordine> ordini = ordineDAO.findByState(IOrdine.STATO.NON_PAGATO);
 
       Assert.assertNotNull(ordini);
@@ -187,8 +242,8 @@ public class OrdineDAOTest {
 
       Assert.assertNotNull(ordini);
       Assert.assertEquals(2, ordini.size());
-      Assert.assertEquals(ordine1.getIdOrdine(), ordini.get(0).getIdOrdine());
-      Assert.assertEquals(ordine2.getIdOrdine(), ordini.get(1).getIdOrdine());
+      Assert.assertEquals(ordine1.getIdOrdine(), ordini.get(1).getIdOrdine());
+      Assert.assertEquals(ordine2.getIdOrdine(), ordini.get(0).getIdOrdine());
    }
 
    @Test

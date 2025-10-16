@@ -17,9 +17,9 @@ public class TipologiaIngredienteDAOTest {
 
     @Before
     public void setUp(){
-        TDAO.addTipologia("Salume");
+        TDAO.addTipologia("Tipologia1");
         tipSal = TDAO.findTipologiaById(TDAO.getLastInsertId());
-        TDAO.addTipologia("Burger");
+        TDAO.addTipologia("Tipologia2");
         tipBurg = TDAO.findTipologiaById(TDAO.getLastInsertId());
     }
 
@@ -30,12 +30,17 @@ public class TipologiaIngredienteDAOTest {
     }
 
     @Test
+    public void getLastInsertIdTest() {
+        Assert.assertEquals("Tipologia2", tipBurg.getNome());
+    }
+
+    @Test
     public void findTipologiaById() {
         TipologiaIngrediente tipologiaIngrediente = TDAO.findTipologiaById(tipBurg.getId());
         Assert.assertNotNull(tipologiaIngrediente);
         Assert.assertEquals(tipBurg.getId(), tipologiaIngrediente.getId());
-        Assert.assertEquals("Burger", tipologiaIngrediente.getNome());
-        System.out.println(tipologiaIngrediente);
+        Assert.assertEquals("Tipologia2", tipologiaIngrediente.getNome());
+
     }
 
     @Test
@@ -43,7 +48,7 @@ public class TipologiaIngredienteDAOTest {
         Assert.assertTrue(TDAO.addTipologia("Salsa"));
         TipologiaIngrediente tipologiaIngrediente = TDAO.findTipologiaById(TDAO.getLastInsertId());
         Assert.assertEquals("Salsa", tipologiaIngrediente.getNome());
-        System.out.println(TDAO.findTipologiaById(TDAO.getLastInsertId()));
+
         TDAO.removeTipologia(TDAO.getLastInsertId());
 
     }
@@ -54,22 +59,31 @@ public class TipologiaIngredienteDAOTest {
         Assert.assertTrue(result);
         TipologiaIngrediente newTip = TDAO.findTipologiaById(tipBurg.getId());
         Assert.assertEquals("Carni", newTip.getNome());
-        System.out.println(TDAO.findTipologiaById(tipBurg.getId()));
+
+    }
+
+    @Test
+    public void tipologiaExistsTest() {
+        Assert.assertTrue(TDAO.tipologiaExists("Tipologia1"));
+        Assert.assertFalse(TDAO.tipologiaExists("Tipologia3"));
+    }
+
+    @Test
+    public void findTipologiaByNomeTest() {
+        TipologiaIngrediente tipologiaIngrediente = TDAO.findTipologiaByNome("Tipologia1");
+        Assert.assertNotNull(tipologiaIngrediente);
+        Assert.assertEquals(tipSal.getId(), tipologiaIngrediente.getId());
+        Assert.assertEquals("Tipologia1", tipologiaIngrediente.getNome());
     }
 
     @Test
     public void removeTipologiaTest() {
         boolean result = TDAO.removeTipologia(tipBurg.getId());
         Assert.assertTrue(result);
-        System.out.println(TDAO.findTipologiaById(tipBurg.getId()));
         Assert.assertNull(TDAO.findTipologiaById(tipBurg.getId()).getId());
-        ArrayList<TipologiaIngrediente> tipologie = TDAO.loadTipologia();
 
-        for(TipologiaIngrediente t : tipologie){
-            System.out.println(t);
-        }
 
-        TDAO.addTipologia("Burger");
+        TDAO.addTipologia("Tipologia2");
         tipBurg = TDAO.findTipologiaById(TDAO.getLastInsertId());
     }
 
@@ -79,12 +93,9 @@ public class TipologiaIngredienteDAOTest {
         ArrayList<TipologiaIngrediente> tipologie = TDAO.loadTipologia();
         Assert.assertNotNull(tipologie);
         Assert.assertFalse(tipologie.isEmpty());
-        Assert.assertEquals("Burger", tipologie.get(0).getNome());
-        Assert.assertEquals("Salume", tipologie.get(1).getNome());
+        Assert.assertEquals("Tipologia2", tipologie.get(1).getNome());
+        Assert.assertEquals("Tipologia1", tipologie.get(0).getNome());
 
-        for(TipologiaIngrediente t : tipologie){
-            System.out.println(t);
-        }
 
     }
 

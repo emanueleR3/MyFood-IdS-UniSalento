@@ -20,10 +20,10 @@ import java.util.ArrayList;
 
 public class InterazioneUtenteDAOTest {
 
-    private IUtenteDAO IDAO = UtenteDAO.getInstance();
-    private IArticoloDAO ADAO = ArticoloDAO.getInstance();
-    private IInterazioneUtenteDAO INTDAO = InterazioneUtenteDAO.getInstance();
-    private ITipologiaProdottoDAO TDAO = TipologiaProdottoDAO.getInstance();
+    private final IUtenteDAO IDAO = UtenteDAO.getInstance();
+    private final IArticoloDAO ADAO = ArticoloDAO.getInstance();
+    private final IInterazioneUtenteDAO INTDAO = InterazioneUtenteDAO.getInstance();
+    private final ITipologiaProdottoDAO TDAO = TipologiaProdottoDAO.getInstance();
     private TipologiaProdotto panTip;
     private TipologiaProdotto bevTip;
     private Utente cliente;
@@ -34,9 +34,6 @@ public class InterazioneUtenteDAOTest {
     private CommentoCliente commentoCliente2;
     private CommentoCliente commentoCliente3;
     private RispostaAmministratore rispostaAmministratore;
-
-
-
 
     @Before
     public void setUp() {
@@ -69,7 +66,7 @@ public class InterazioneUtenteDAOTest {
         INTDAO.addCommento(commentoCliente2);
         commentoCliente2.setIdCommento(INTDAO.getLastCommentoInsertId());
 
-        rispostaAmministratore = new RispostaAmministratore(commentoCliente2.getId(), "Che pretendi? è un fast food", amministratore, Timestamp.valueOf("2024-01-08 14:01:15"));
+        rispostaAmministratore = new RispostaAmministratore(commentoCliente2, "Che pretendi? è un fast food", amministratore, Timestamp.valueOf("2024-01-08 14:01:15"));
 
         INTDAO.addRisposta(rispostaAmministratore);
 
@@ -85,7 +82,7 @@ public class InterazioneUtenteDAOTest {
 
     @After
     public void tearDown(){
-        INTDAO.removeRispostaByIdCommento(commentoCliente2.getId());
+        INTDAO.removeRispostaById(commentoCliente2.getId());
         INTDAO.removeCommento(commentoCliente1.getId());
         INTDAO.removeCommento(commentoCliente2.getId());
 
@@ -98,8 +95,13 @@ public class InterazioneUtenteDAOTest {
     }
 
     @Test
-    public void getLastInsertIdTest() {
-        // TODO
+    public void getLastCommentoInsertIdTest() {
+        Assert.assertEquals("Il mio preferito!", commentoCliente3.getTesto());
+    }
+
+    @Test
+    public void getLastRispostaInsertIdTest() {
+        Assert.assertEquals("Che pretendi? è un fast food", rispostaAmministratore.getTesto());
     }
 
     @Test
@@ -110,12 +112,11 @@ public class InterazioneUtenteDAOTest {
         Assert.assertEquals("Più ghiaccio che bevanda", commentoCliente.getTesto());
         Assert.assertEquals(IInterazioneUtente.INDICE_GRADIMENTO.DUE, commentoCliente.getIndiceDiGradimento());
         Assert.assertEquals(Timestamp.valueOf("2024-01-08 09:01:15"), commentoCliente.getDataEOra());
-        System.out.println(commentoCliente);
     }
 
     @Test
-    public void findLastCommentiTest() {
-        ArrayList<CommentoCliente> commenti = INTDAO.findLastCommenti();
+    public void findCommentiTest() {
+        ArrayList<CommentoCliente> commenti = INTDAO.findCommenti();
         Assert.assertNotNull(commenti);
         Assert.assertFalse(commenti.isEmpty());
         Assert.assertNotNull(commenti.get(0).getId());
@@ -124,9 +125,7 @@ public class InterazioneUtenteDAOTest {
         Assert.assertEquals(commentoCliente1.getId(), commenti.get(0).getId());
         Assert.assertEquals(commentoCliente3.getId(), commenti.get(1).getId());
         Assert.assertEquals(commentoCliente2.getId(), commenti.get(2).getId());
-        for(CommentoCliente c : commenti){
-            System.out.println(c);
-        }
+
     }
 
     @Test
@@ -137,11 +136,67 @@ public class InterazioneUtenteDAOTest {
         Assert.assertEquals(commenti.get(0).getId(), commentoCliente1.getId());
 
 
-        for(CommentoCliente c : commenti){
-            System.out.println(c);
-        }
     }
 
+    @Test
+    public void commentoHasRispostaTest() {
+        Assert.assertTrue(INTDAO.commentoHasRisposta(commentoCliente2.getId()));
+    }
+
+    @Test
+    public void findCommentoByClienteAndArticoloTest() {
+        CommentoCliente commentoCliente = INTDAO.findCommentoByClienteAndArticolo(cliente, articolo);
+        Assert.assertNotNull(commentoCliente);
+        Assert.assertEquals(commentoCliente.getId(), commentoCliente3.getId());
+        Assert.assertEquals(commentoCliente.getTesto(), commentoCliente3.getTesto());
+        Assert.assertEquals(commentoCliente.getUtente().getId(), commentoCliente3.getUtente().getId());
+        Assert.assertEquals(commentoCliente.getIdArticolo(), commentoCliente3.getIdArticolo());
+        Assert.assertEquals(commentoCliente.getIndiceDiGradimento(), commentoCliente3.getIndiceDiGradimento());
+
+
+    }
+
+    @Test
+    public void updateCommentoTest() {
+        boolean done = INTDAO.updateCommento(commentoCliente1, "Testo modificato", IInterazioneUtente.INDICE_GRADIMENTO.DUE);
+        Assert.assertTrue(done);
+        CommentoCliente commentoClienteMod = INTDAO.findCommentoById(commentoCliente1.getId());
+        Assert.assertEquals(commentoCliente1.getId(), commentoClienteMod.getId());
+        Assert.assertEquals("Testo modificato", commentoClienteMod.getTesto());
+        Assert.assertEquals(IInterazioneUtente.INDICE_GRADIMENTO.DUE, commentoClienteMod.getIndiceDiGradimento());
+
+    }
+
+
+    @Test
+    public void updateRispostaTest() {
+
+        RispostaAmministratore rispostaAmministratoreToMod;
+        rispostaAmministratoreToMod = rispostaAmministratore;
+        rispostaAmministratoreToMod.setTesto("Testo modificato");
+        rispostaAmministratoreToMod.setCommentoRisposto(commentoCliente1);
+        rispostaAmministratoreToMod.setDataEOra(Timestamp.valueOf("2024-01-08 09:01:15"));
+
+        boolean done = INTDAO.updateRisposta(rispostaAmministratoreToMod);
+
+        Assert.assertTrue(done);
+
+        RispostaAmministratore rispostaAmministratoreMod = INTDAO.findRispostaById(rispostaAmministratore.getId());
+        Assert.assertEquals(rispostaAmministratore.getId(), rispostaAmministratoreMod.getId());
+        Assert.assertEquals("Testo modificato", rispostaAmministratoreMod.getTesto());
+        Assert.assertEquals(Timestamp.valueOf("2024-01-08 09:01:15"), rispostaAmministratoreMod.getDataEOra());
+
+    }
+
+    @Test
+    public void removeRispostePerAmministratoreTest() {
+
+        boolean done = INTDAO.removeRispostePerAmministratore(amministratore.getId());
+        Assert.assertTrue(done);
+
+        Assert.assertNull(INTDAO.findRispostaById(rispostaAmministratore.getId()));
+
+    }
 
     @Test
     public void findCommentiByDateTest() {
@@ -151,25 +206,59 @@ public class InterazioneUtenteDAOTest {
         Assert.assertFalse(commenti.isEmpty());
         Assert.assertEquals(commenti.get(0).getId(), commentoCliente2.getId());
 
-        for(CommentoCliente c : commenti){
-            System.out.println(c);
-        }
     }
 
 
     @Test
     public void findCommentiByArticoloTest() {
-        ArrayList<CommentoCliente> commenti = INTDAO.findCommentiByArticolo(panTip.getId());
+        ArrayList<CommentoCliente> commenti = INTDAO.findCommentiByArticolo(articolo.getId());
         Assert.assertNotNull(commenti);
         Assert.assertEquals(2, commenti.size());
         Assert.assertEquals(commentoCliente1.getId(), commenti.get(0).getId());
         Assert.assertEquals(commentoCliente3.getId(), commenti.get(1).getId());
-        for(CommentoCliente c : commenti){
-            System.out.println(c);
-        }
+
 
     }
 
+    @Test
+    public void findRisposteByIdCommentoTest() {
+        ArrayList<RispostaAmministratore> risposteAmministratore = INTDAO.findRisposteByIdCommento(commentoCliente2.getId());
+
+        Assert.assertNotNull(risposteAmministratore);
+
+        for (RispostaAmministratore value : risposteAmministratore) Assert.assertNotNull(value);
+
+        Assert.assertEquals(rispostaAmministratore.getId(), risposteAmministratore.get(0).getId());
+        Assert.assertEquals(rispostaAmministratore.getTesto(), risposteAmministratore.get(0).getTesto());
+        Assert.assertEquals(rispostaAmministratore.getCommentoRisposto().getId(), risposteAmministratore.get(0).getCommentoRisposto().getId());
+        Assert.assertEquals(rispostaAmministratore.getDataEOra(), risposteAmministratore.get(0).getDataEOra());
+        Assert.assertEquals(rispostaAmministratore.getUtente().getId(), risposteAmministratore.get(0).getUtente().getId());
+
+
+    }
+
+    @Test
+    public void findRispostaById() {
+        RispostaAmministratore rispostaAmministratore1 = INTDAO.findRispostaById(rispostaAmministratore.getId());
+        Assert.assertNotNull(rispostaAmministratore1);
+        Assert.assertNotNull(rispostaAmministratore1.getId());
+        Assert.assertEquals(rispostaAmministratore.getId(), rispostaAmministratore1.getId());
+        Assert.assertEquals(rispostaAmministratore.getTesto(), rispostaAmministratore1.getTesto());
+        Assert.assertEquals(rispostaAmministratore.getCommentoRisposto().getId(), rispostaAmministratore1.getCommentoRisposto().getId());
+        Assert.assertEquals(rispostaAmministratore.getDataEOra(), rispostaAmministratore1.getDataEOra());
+        Assert.assertEquals(rispostaAmministratore.getUtente().getId(), rispostaAmministratore1.getUtente().getId());
+
+
+    }
+
+    @Test
+    public void removeRispostaById() {
+        boolean done = INTDAO.removeRispostaById(rispostaAmministratore.getId());
+        Assert.assertTrue(done);
+
+        RispostaAmministratore rispostaAmministratore1 = INTDAO.findRispostaById(rispostaAmministratore.getId());
+        Assert.assertNull(rispostaAmministratore1);
+    }
 
     @Test
     public void caricaInterazioniTest() {
@@ -180,18 +269,12 @@ public class InterazioneUtenteDAOTest {
         Assert.assertEquals(commentoCliente2.getId(), interazioniCliente.get(1).getId());
         Assert.assertEquals(commentoCliente3.getId(), interazioniCliente.get(2).getId());
 
-        for(IInterazioneUtente c : interazioniCliente){
-            System.out.println(c);
-        }
 
         ArrayList<IInterazioneUtente> interazioniAmministratore = INTDAO.caricaInterazioni(amministratore);
         Assert.assertNotNull(interazioniAmministratore);
         Assert.assertEquals(1, interazioniAmministratore.size());
         Assert.assertEquals(rispostaAmministratore.getId(), interazioniAmministratore.get(0).getId());
 
-        for(IInterazioneUtente c : interazioniAmministratore){
-            System.out.println(c);
-        }
 
 
     }
@@ -206,7 +289,7 @@ public class InterazioneUtenteDAOTest {
         Assert.assertEquals("Ottimo rapporto qualità prezzo!", commentoCliente.getTesto());
         Assert.assertEquals(IInterazioneUtente.INDICE_GRADIMENTO.QUATTRO, commentoCliente.getIndiceDiGradimento());
         Assert.assertEquals(Timestamp.valueOf("2024-01-08 14:01:15"), commentoCliente.getDataEOra());
-        System.out.println(commentoCliente);
+
         INTDAO.removeCommento(commentoCliente.getId());
 
     }
@@ -214,7 +297,7 @@ public class InterazioneUtenteDAOTest {
     @Test
     public void addRispostaTest() {
 
-        boolean result = INTDAO.addRisposta(new RispostaAmministratore(commentoCliente1.getId(), "Ti ringraziamo per la tua recensione!", amministratore, Timestamp.valueOf("2024-01-08 14:01:15")));
+        boolean result = INTDAO.addRisposta(new RispostaAmministratore(commentoCliente1, "Ti ringraziamo per la tua recensione!", amministratore, Timestamp.valueOf("2024-01-08 14:01:15")));
 
         ArrayList<IInterazioneUtente> risposte = INTDAO.caricaInterazioni(amministratore);
 
@@ -224,14 +307,13 @@ public class InterazioneUtenteDAOTest {
         Assert.assertEquals(rispostaAmministratore2.getUtente().getId(), amministratore.getId());
         Assert.assertEquals("Ti ringraziamo per la tua recensione!", rispostaAmministratore2.getTesto());
         Assert.assertEquals(Timestamp.valueOf("2024-01-08 14:01:15"), rispostaAmministratore2.getDataEOra());
-        System.out.println(rispostaAmministratore2);
-        INTDAO.removeRispostaByIdCommento(commentoCliente1.getId());
+        INTDAO.removeRisposteByIdCommento(commentoCliente1.getId());
 
     }
 
 
     @Test
-    public void removeCommmentoTest() {
+    public void removeCommentoTest() {
         INTDAO.addCommento(new CommentoCliente(cliente, articolo.getId(), "Ottimo rapporto qualità prezzo!", IInterazioneUtente.INDICE_GRADIMENTO.QUATTRO, Timestamp.valueOf("2024-01-08 14:01:15") ));
         CommentoCliente commentoCliente = INTDAO.findCommentoById(INTDAO.getLastCommentoInsertId());
 
@@ -244,9 +326,9 @@ public class InterazioneUtenteDAOTest {
 
     @Test
     public void removeRispostaByIdCommentoTest() {
-        INTDAO.addRisposta(new RispostaAmministratore(commentoCliente1.getId(), "Ti ringraziamo per la tua recensione!", amministratore, Timestamp.valueOf("2024-01-08 14:01:15")));
+        INTDAO.addRisposta(new RispostaAmministratore(commentoCliente1, "Ti ringraziamo per la tua recensione!", amministratore, Timestamp.valueOf("2024-01-08 14:01:15")));
 
-        boolean result = INTDAO.removeRispostaByIdCommento(commentoCliente1.getId());
+        boolean result = INTDAO.removeRisposteByIdCommento(commentoCliente1.getId());
 
         ArrayList<IInterazioneUtente> risposte = INTDAO.caricaInterazioni(amministratore);
 

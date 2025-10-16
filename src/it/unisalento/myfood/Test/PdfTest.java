@@ -23,10 +23,5 @@ public class PdfTest {
 
         List<IArticolo> articoli = new ArrayList<>();
         articoli.add(p);
-
-
-        // TODO DocumentoOrdine ordine = new DocumentoOrdine(pdfAPI, articoli);
-
-       // ordine.invia("emanuele.romano2@studenti.unisalento.it");    // TODO: preso dinamicamente dall'utente loggato
     }
 }

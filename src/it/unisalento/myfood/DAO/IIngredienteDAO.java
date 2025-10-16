@@ -15,6 +15,8 @@ public interface IIngredienteDAO {
 
     ArrayList<Ingrediente> findAll();
 
+    ArrayList<Ingrediente> findIngredientePerTipologia(String filtroTipologia);
+
     ArrayList<Azienda> getDistributoriPerIngrediente(Integer idIngrediente);
 
     boolean addIngrediente(Ingrediente ingrediente);

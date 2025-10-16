@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.TreeMap;
 
 public abstract class Form {
+
+    //la stringa deve avere lo stesso nome del campo nel business
     TreeMap<String, JTextField> textFields = new TreeMap();
 
     public TreeMap<String, JTextField> getTextFields(){
@@ -22,6 +24,5 @@ public abstract class Form {
     public ArrayList<JRadioButton> getRadioButtons (){
         return radioButtons;
     }
-
 
 }

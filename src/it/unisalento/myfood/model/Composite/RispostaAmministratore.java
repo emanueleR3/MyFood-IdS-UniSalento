@@ -7,7 +7,7 @@ import java.sql.Timestamp;
 public class RispostaAmministratore implements IInterazioneUtente {
 
     private Integer idRiposta;
-    private Integer idCommentoRisposto;  //TODO: deve essere IInterazioneUtente per implementare il composite
+    private IInterazioneUtente commentoRisposto;
     private String testo;
 
     private Utente amministratore;
@@ -16,8 +16,8 @@ public class RispostaAmministratore implements IInterazioneUtente {
 
     public RispostaAmministratore() {}
 
-    public RispostaAmministratore(Integer idCommentoRisposto, String testo, Utente amministratore, Timestamp dataEOra) {
-        this.idCommentoRisposto = idCommentoRisposto;
+    public RispostaAmministratore(CommentoCliente commentoRisposto, String testo, Utente amministratore, Timestamp dataEOra) {
+        this.commentoRisposto = commentoRisposto;
         this.testo = testo;
         this.amministratore = amministratore;
         this.dataEOra = dataEOra;
@@ -27,8 +27,8 @@ public class RispostaAmministratore implements IInterazioneUtente {
         this.idRiposta = idRiposta;
     }
 
-    public void setIdCommentoRisposto(Integer idCommentoRisposto) {
-        this.idCommentoRisposto = idCommentoRisposto;
+    public void setCommentoRisposto(CommentoCliente commentoRisposto) {
+        this.commentoRisposto = commentoRisposto;
     }
 
     public void setTesto(String testo) {
@@ -43,8 +43,8 @@ public class RispostaAmministratore implements IInterazioneUtente {
         this.dataEOra = dataEOra;
     }
 
-    public Integer getIdCommentoRisposto() {
-        return idCommentoRisposto;
+    public IInterazioneUtente getCommentoRisposto() {
+        return commentoRisposto;
     }
 
     @Override
@@ -71,7 +71,7 @@ public class RispostaAmministratore implements IInterazioneUtente {
     public String toString() {
         return "RispostaAmministratore{" +
                 "idRiposta=" + idRiposta +
-                ", idCommentoRisposto=" + idCommentoRisposto +
+                ", idCommentoRisposto=" + commentoRisposto.getId() +
                 ", testo='" + testo + '\'' +
                 ", amministratore=" + amministratore +
                 ", dataEOra=" + dataEOra +

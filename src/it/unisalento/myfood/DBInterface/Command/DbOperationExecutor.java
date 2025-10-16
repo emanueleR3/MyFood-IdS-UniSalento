@@ -3,7 +3,7 @@ package it.unisalento.myfood.DBInterface.Command;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DbOperationExecutor {   //TODO: renderlo Singleton
+public class DbOperationExecutor {
     private final int MAX_CTRL_Z = 10;
     private List<IDbOperation> dbOperationList = new ArrayList<>();
 

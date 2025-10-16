@@ -8,5 +8,9 @@ public abstract class Documento {
         this.pdfAPI = pdfAPI;
     }
 
-    public abstract void invia(String indirizzo);   // astratto perchè in base all'uso che si fa, avrà una funzione diversa
+    public abstract void inviaListaOrdineEffettuato(String indirizzo);   // astratto perchè in base all'uso che si fa, avrà una funzione diversa
+
+    public abstract void inviaListaPagamentoEffettuato(String indirizzo);
+
+    public abstract void inviaListaOrdineCompletato(String indirizzo);
 }

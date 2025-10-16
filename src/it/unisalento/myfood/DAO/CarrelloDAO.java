@@ -62,7 +62,6 @@ public class CarrelloDAO implements ICarrelloDAO {
         return null;
     }
 
-    // TODO: NELLA VIEW (COME UX) MOSTRARE IL NUMERO DI UNITA' NEL CARRELLO PER OGNI PRODOTTO NEL CATALOGO IN MODO CHE CI EVITIAMO IL CONTROLLO SULLA SOMMA DEI PRODOTTI
     /**
      *
      * @param idArticolo

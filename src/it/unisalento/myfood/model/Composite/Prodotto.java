@@ -2,7 +2,6 @@ package it.unisalento.myfood.model.Composite;
 
 import it.unisalento.myfood.model.Ingrediente;
 import it.unisalento.myfood.model.TipologiaProdotto;
-import jdk.jfr.Percentage;
 
 import java.util.ArrayList;
 

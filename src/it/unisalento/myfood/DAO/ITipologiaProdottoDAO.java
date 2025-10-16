@@ -14,8 +14,6 @@ public interface ITipologiaProdottoDAO {
 
     ArrayList<TipologiaProdotto> loadTipologia();
 
-    void reloadTipologia();  //TODO:???
-
     TipologiaProdotto findTipologiaById(Integer idTipologia);
 
     TipologiaProdotto findTipologiaByName(String nome);

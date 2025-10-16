@@ -29,8 +29,8 @@ public class ArticoloDAOTest {
     @Before
     public void setUp() {
         // Aggiunge la tipologia "panini" alle tipologie
-        tipologiaProdottoDAO.addTipologia("Panini");
-        panTip = tipologiaProdottoDAO.findTipologiaByName("Panini");
+        tipologiaProdottoDAO.addTipologia("Tipologia1");
+        panTip = tipologiaProdottoDAO.findTipologiaByName("Tipologia1");
 
         // Crea una lista di articoli
         ArrayList<IArticolo> articoli = new ArrayList<>();
@@ -44,7 +44,6 @@ public class ArticoloDAOTest {
 
         // Aggiunge il prodotto alla lista di articoli
         articoli.add(panino);
-
 
         // Crea un menu costituito da un prodotto
         ArrayList<IArticolo> articoliMenu1 = new ArrayList<>();
@@ -69,18 +68,50 @@ public class ArticoloDAOTest {
 
     @After
     public void tearDown() {
-        boolean done = articoloDAO.removeArticoloRecursive(menu);
+        boolean done = articoloDAO.removeArticolo(menu);
         Assert.assertTrue(done);
 
-        tipologiaProdottoDAO.removeTipologia(panTip.getId());
-        articoloDAO.removeArticolo(panino);
         articoloDAO.removeArticolo(menu1);
-        articoloDAO.removeArticolo(menu);
+        articoloDAO.removeArticolo(panino);
+        tipologiaProdottoDAO.removeTipologia(panTip.getId());
 
     }
 
+    @Test
+    public void findMenuContainsTipologiaIngrediente() {
+        tipologiaIngredienteDAO.addTipologia("TipologiaIng1");
+        TipologiaIngrediente tipIngredTest = tipologiaIngredienteDAO.findTipologiaById(tipologiaIngredienteDAO.getLastInsertId());
+
+        aziendaDAO.addAzienda("Azienda Test", "04731980969");
+        Azienda aziendaTest = aziendaDAO.findById(aziendaDAO.getLastInsertId());
+
+        Ingrediente ingrediente = new Ingrediente("Ingrediente1", tipIngredTest, aziendaTest, null);
+
+        ingredienteDAO.addIngrediente(ingrediente);
+        ingrediente.setId(ingredienteDAO.getLastInsertId());
+
+        // Aggiungo un prodotto con il nuovo ingrediente il nuovo ingrediente
+        ArrayList<Ingrediente> ingredienti = new ArrayList<>();
+        ingredienti.add(ingrediente);
+
+        Prodotto prodottoTest = new Prodotto("Prodotto Test", "[...]", 3f, 80, panTip, ingredienti, null, null);
+        articoloDAO.addArticolo(prodottoTest);
+        prodottoTest = (Prodotto) articoloDAO.findById(articoloDAO.getLastInsertId());
+        articoloDAO.addArticoloToMenu(menu.getId(), prodottoTest.getId());
+
+        List<IArticolo> menuList = articoloDAO.findMenuContainsTipologiaIngrediente(tipIngredTest);
+
+        Assert.assertEquals(1, menuList.size());
+        Assert.assertEquals(menu.getId(), menuList.get(0).getId());
+
+        articoloDAO.removeArticolo(prodottoTest);
+        ingredienteDAO.removeIngrediente(ingrediente.getId());
+        aziendaDAO.removeAzienda(aziendaTest.getId());
+        tipologiaIngredienteDAO.removeTipologia(tipIngredTest.getId());
+    }
+
    @Test
-    public void findProdottoByTipologiaTest() {
+    public void findProdottoByTipologiaProdottoTest() {
         // Aggiungo una tipologia fittizia e inserisco un prodotto --> Non dovrà uscire nell'arraylist finale
         tipologiaProdottoDAO.addTipologia("Bevande");
         TipologiaProdotto bevTip = tipologiaProdottoDAO.findTipologiaByName("Bevande");
@@ -94,7 +125,7 @@ public class ArticoloDAOTest {
         articoloDAO.addArticolo(hamburger);
         hamburger.setId(articoloDAO.getLastInsertId());
 
-        List<IArticolo> prodotti = articoloDAO.findProdottoByTipologia(tipologiaProdottoDAO.findTipologiaByName("Panini"));
+        List<IArticolo> prodotti = articoloDAO.findProdottoByTipologiaProdotto(tipologiaProdottoDAO.findTipologiaByName("Tipologia1"));
 
         // Deve contenere solo Panino e Hamburger
         Assert.assertEquals(prodotti.size(), 2);
@@ -108,44 +139,37 @@ public class ArticoloDAOTest {
         TipologiaProdottoDAO.getInstance().removeTipologia(bevTip.getId());
     }
 
+
     @Test
-    public void findProdottoByTipologiaContainsTest() {
-        /*TipologiaIngrediente tipologiaSalume = tipologiaIngredienteDAO.findTipologiaById(tipologiaIngredienteDAO.getLastInsertId());
+    public void findProdottoByTipologie() {
+        tipologiaIngredienteDAO.addTipologia("TipologiaIng1");
+        TipologiaIngrediente tipIngredTest = tipologiaIngredienteDAO.findTipologiaById(tipologiaIngredienteDAO.getLastInsertId());
 
-        aziendaDAO.addAzienda("CESARE FIORUCCI S.P.A.", "04731980969");
-        Azienda fiorucci = aziendaDAO.findById(aziendaDAO.getLastInsertId());
+        aziendaDAO.addAzienda("Azienda Test", "04731980969");
+        Azienda aziendaTest = aziendaDAO.findById(aziendaDAO.getLastInsertId());
 
-        Ingrediente ingrediente = new Ingrediente("Bacon", tipologiaSalume, fiorucci, null);
+        Ingrediente ingrediente = new Ingrediente("Ingrediente1", tipIngredTest, aziendaTest, null);
 
         ingredienteDAO.addIngrediente(ingrediente);
         ingrediente.setId(ingredienteDAO.getLastInsertId());
 
-        // Aggiungo al panino il nuovo ingrediente
+        // Aggiungo un prodotto con il nuovo ingrediente il nuovo ingrediente
         ArrayList<Ingrediente> ingredienti = new ArrayList<>();
         ingredienti.add(ingrediente);
-        panino.setIngredienti(ingredienti);
 
-       List<IArticolo> prodotti =  articoloDAO.findProdottoByTipologiaContains(panTip, ingrediente);
+        Prodotto prodottoTest = new Prodotto("Prodotto Test", "[...]", 3f, 80, panTip, ingredienti, null, null);
+        articoloDAO.addArticolo(prodottoTest);
+        prodottoTest = (Prodotto) articoloDAO.findById(articoloDAO.getLastInsertId());
 
-       Assert.assertEquals(panino.getId(), prodotti.get(0).getId());
+        List<IArticolo> prodottiList = articoloDAO.findProdottoByTipologie(panTip, tipIngredTest);
 
-        Iterator<IArticolo> iterator = prodotti.listIterator();
+        Assert.assertEquals(1, prodottiList.size());
+        Assert.assertEquals(prodottoTest.getId(), prodottiList.get(0).getId());
 
-        while(iterator.hasNext()){
-            System.out.println(iterator.next());
-        }
-
+        articoloDAO.removeArticolo(prodottoTest);
         ingredienteDAO.removeIngrediente(ingrediente.getId());
-        aziendaDAO.removeAzienda(fiorucci.getId());
-*/
-
-
-        //TODO
-    }
-
-    @Test
-    public void findMenuContainsTest() {
-        //TODO
+        aziendaDAO.removeAzienda(aziendaTest.getId());
+        tipologiaIngredienteDAO.removeTipologia(tipIngredTest.getId());
     }
 
     @Test
@@ -222,7 +246,7 @@ public class ArticoloDAOTest {
         ArrayList<CommentoCliente> commentiTest = new ArrayList<>();
 
         // Popolamento database
-        Utente cliente = PopolaDatabase.creaCliente();
+        Utente cliente = PopolaDatabase.creaCliente(true);
         Carrello carrello = PopolaDatabase.creaCarrello(cliente, prodottoTest, 1);
         Ordine ordine = PopolaDatabase.creaOrdine(carrello);
         CommentoCliente commento = (CommentoCliente) PopolaDatabase.creaCommento(prodottoTest, cliente);
@@ -259,6 +283,7 @@ public class ArticoloDAOTest {
         PopolaDatabase.svuotaCarrello(cliente);
         PopolaDatabase.svuotaCommento(commento);
         PopolaDatabase.rimuoviUtente(cliente);
+        articoloDAO.removeArticolo(prodottoTest);
         PopolaDatabase.eliminaMenu(menuTest);
         PopolaDatabase.eliminaIngrediente(ingrediente);
         PopolaDatabase.eliminaTipologiaIngrediente(tipologiaIngrediente);
@@ -277,7 +302,7 @@ public class ArticoloDAOTest {
         ArrayList<CommentoCliente> commentiTest = new ArrayList<>();
 
         // Popolamento database
-        Utente cliente = PopolaDatabase.creaCliente();
+        Utente cliente = PopolaDatabase.creaCliente(true);
         Menu menuTest = PopolaDatabase.creaMenu(articoliTest, commentiTest);
         Carrello carrello = PopolaDatabase.creaCarrello(cliente, menuTest, 1);
         Ordine ordine = PopolaDatabase.creaOrdine(carrello);
@@ -324,20 +349,12 @@ public class ArticoloDAOTest {
     }
 
     @Test
-    public void removeArticoloRecursiveTest() {
-        //TODO
-    }
-
-    @Test
-    public void removeArticoloFromTable() {
-        // TODO
-    }
-
-    @Test
     public void getLastInsertIdTest() {
         Prodotto prodottoTest = new Prodotto("ProdottoTest", "[...]", 2f, 150, panTip, null, null, null);
         articoloDAO.addArticolo(prodottoTest);
         prodottoTest.setId(articoloDAO.getLastInsertId());
+
+        Assert.assertEquals("ProdottoTest", prodottoTest.getNome());
 
         articoloDAO.removeArticolo(prodottoTest);
     }
@@ -374,7 +391,7 @@ public class ArticoloDAOTest {
         Assert.assertEquals(articoliMenuDB.size(), menuTest.getArticoli().size());
         Assert.assertEquals(articoliMenuDB.get(0).getId(), panino.getId());
 
-        articoloDAO.removeArticoloRecursive(menuTest);
+        articoloDAO.removeArticolo(menuTest);
     }
 
     @Test
@@ -393,10 +410,10 @@ public class ArticoloDAOTest {
 
     @Test
     public void addIngredienteToProdottoTest() {
-        tipologiaIngredienteDAO.addTipologia("Salume");
+        tipologiaIngredienteDAO.addTipologia("Tipologia2");
         TipologiaIngrediente tipologiaSalume = tipologiaIngredienteDAO.findTipologiaById(tipologiaIngredienteDAO.getLastInsertId());
 
-        aziendaDAO.addAzienda("CESARE FIORUCCI S.P.A.", "04731980969");
+        aziendaDAO.addAzienda("CESARE FIORUCCI S.P.A.", "3840583");
         Azienda fiorucci = aziendaDAO.findById(aziendaDAO.getLastInsertId());
 
         Ingrediente ingrediente = new Ingrediente("Bacon", tipologiaSalume, fiorucci, null);
@@ -431,7 +448,7 @@ public class ArticoloDAOTest {
         TipologiaIngrediente tipologiaSalume = tipologiaIngredienteDAO.findTipologiaById(tipologiaIngredienteDAO.getLastInsertId());
 
         // Aggiungo
-        aziendaDAO.addAzienda("CESARE FIORUCCI S.P.A.", "04731980969");
+        aziendaDAO.addAzienda("CESARE FIORUCCI S.P.A.", "834598349");
         Azienda fiorucci = aziendaDAO.findById(aziendaDAO.getLastInsertId());
 
         // Aggiungo un ingrediente
@@ -466,7 +483,7 @@ public class ArticoloDAOTest {
     @Test
     public void updateDisponibilitaAfterOrdineTest() {
         HashMap<Integer, Integer> articoliOrdine = new HashMap<>();
-        Utente cliente = PopolaDatabase.creaCliente();
+        Utente cliente = PopolaDatabase.creaCliente(true);
 
         // Ordine contenente due prodotti
         Prodotto prodottoTest1 = new Prodotto("TestProdotto1", "[...]", 4.60f, 100, panTip, null, null, null);

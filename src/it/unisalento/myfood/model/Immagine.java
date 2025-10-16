@@ -1,7 +1,5 @@
 package it.unisalento.myfood.model;
 
-import it.unisalento.myfood.model.Composite.IArticolo;
-
 import java.awt.*;
 
 public class Immagine {

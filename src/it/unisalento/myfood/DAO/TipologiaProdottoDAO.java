@@ -4,9 +4,6 @@ import it.unisalento.myfood.DBInterface.Command.DbOperationExecutor;
 import it.unisalento.myfood.DBInterface.Command.IDbOperation;
 import it.unisalento.myfood.DBInterface.Command.ReadOperation;
 import it.unisalento.myfood.DBInterface.Command.WriteOperation;
-import it.unisalento.myfood.DBInterface.DbConnection;
-import it.unisalento.myfood.DBInterface.IDbConnection;
-import it.unisalento.myfood.model.Composite.IArticolo;
 import it.unisalento.myfood.model.TipologiaProdotto;
 
 import java.sql.ResultSet;
@@ -74,8 +71,7 @@ public class TipologiaProdottoDAO implements ITipologiaProdottoDAO {
         DbOperationExecutor executor = new DbOperationExecutor();
         IDbOperation writeOp = new WriteOperation(sql);
         int rowsAffected = executor.executeOperation(writeOp).getRowsAffected();
-        
-        reloadTipologia();
+
         return rowsAffected > 0;
     }
 
@@ -91,7 +87,6 @@ public class TipologiaProdottoDAO implements ITipologiaProdottoDAO {
         IDbOperation writeOp = new WriteOperation(sql);
         int rowsAffected = executor.executeOperation(writeOp).getRowsAffected();
 
-        reloadTipologia();
 
         return rowsAffected > 0;
     }
@@ -109,7 +104,6 @@ public class TipologiaProdottoDAO implements ITipologiaProdottoDAO {
         IDbOperation writeOp = new WriteOperation(sql);
         rowsAffected = executor.executeOperation(writeOp).getRowsAffected();
 
-        reloadTipologia();
 
         return rowsAffected > 0;
     }
@@ -119,7 +113,7 @@ public class TipologiaProdottoDAO implements ITipologiaProdottoDAO {
 
         ArrayList<TipologiaProdotto> tipologie = new ArrayList<>();
 
-        String sql = "SELECT * FROM TipologiaProdotto;";
+        String sql = "SELECT * FROM TipologiaProdotto ORDER BY idTipologiaProdotto ASC;";
 
         DbOperationExecutor executor = new DbOperationExecutor();
         IDbOperation readOp = new ReadOperation(sql);
@@ -143,12 +137,6 @@ public class TipologiaProdottoDAO implements ITipologiaProdottoDAO {
         }
 
         return tipologie;
-    }
-
-    @Override
-    public void reloadTipologia() {  //TODO:???
-       // IArticolo.tipologiaProdotto.clear();
-       // IArticolo.tipologiaProdotto.addAll(loadTipologia());
     }
 
     @Override

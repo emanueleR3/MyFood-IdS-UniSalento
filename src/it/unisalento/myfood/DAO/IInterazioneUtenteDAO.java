@@ -15,11 +15,15 @@ public interface IInterazioneUtenteDAO {
 
     CommentoCliente findCommentoById(Integer idCommento);
 
-    ArrayList<CommentoCliente> findLastCommenti();
+    RispostaAmministratore findRispostaById(Integer idRisposta);
+
+    ArrayList<CommentoCliente> findCommenti();
 
     ArrayList<CommentoCliente> findCommentiNotAnswered();
 
     ArrayList<CommentoCliente> findCommentiByDate(Timestamp dataEOra);
+
+    ArrayList<RispostaAmministratore> findRisposteByIdCommento(Integer idCommento);
 
     ArrayList<CommentoCliente> findCommentiByArticolo(Integer idArticolo);
 
@@ -29,7 +33,9 @@ public interface IInterazioneUtenteDAO {
 
     boolean addCommento(CommentoCliente commento);
 
-    boolean removeRispostaByIdCommento(Integer idCommento);
+    boolean removeRisposteByIdCommento(Integer idCommento);
+
+    boolean removeRispostaById(Integer idRisposta);
 
     Integer getLastCommentoInsertId();
 
@@ -42,4 +48,8 @@ public interface IInterazioneUtenteDAO {
     CommentoCliente findCommentoByClienteAndArticolo(Utente utente, IArticolo articolo);
 
     boolean updateCommento(CommentoCliente commento, String testo, IInterazioneUtente.INDICE_GRADIMENTO indice);
+
+    boolean updateRisposta(RispostaAmministratore iu);
+
+    boolean removeRispostePerAmministratore(Integer id);
 }

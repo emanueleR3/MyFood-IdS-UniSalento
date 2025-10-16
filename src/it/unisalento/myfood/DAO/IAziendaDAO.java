@@ -11,6 +11,8 @@ public interface IAziendaDAO {
 
     Azienda findById(Integer id);
 
+    ArrayList<Azienda> findAll();
+
     List<Integer> loadProducedIngredienti(Integer idAzienda);
 
     ArrayList<Integer> loadDistributedIngredienti(Integer idAzienda);

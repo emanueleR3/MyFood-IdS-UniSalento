@@ -1,7 +1,7 @@
 package it.unisalento.myfood.View;
 
 import it.unisalento.myfood.Business.ArticoloBusiness;
-import it.unisalento.myfood.View.Listener.QuantityCartListener;
+import it.unisalento.myfood.Listener.QuantityCartListener;
 
 import javax.swing.*;
 import java.awt.*;
@@ -32,6 +32,7 @@ public class QuantityCartFrame {
 
     public void openQuantityFrame() {
         frameQuantita.setSize(300, 150);
+        frameQuantita.setResizable(false);
         frameQuantita.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         // Aggiungi il campo per la quantità

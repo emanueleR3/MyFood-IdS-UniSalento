@@ -12,9 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AziendaDAOTest {
-    private IAziendaDAO ADAO = AziendaDAO.getInstance();
-    private IIngredienteDAO IDAO = IngredienteDAO.getInstance();
-    private ITipologiaIngredienteDAO TDAO = TipologiaIngredienteDAO.getInstance();
+    private final IAziendaDAO ADAO = AziendaDAO.getInstance();
+    private final IIngredienteDAO IDAO = IngredienteDAO.getInstance();
+    private final ITipologiaIngredienteDAO TDAO = TipologiaIngredienteDAO.getInstance();
     private Azienda fiorucci;
     private Azienda distributoreProsciutti1;
     private Ingrediente ingrediente1;
@@ -23,11 +23,11 @@ public class AziendaDAOTest {
 
     @Before
     public void setUp(){
-        TDAO.addTipologia("Salume");
+        TDAO.addTipologia("Tipologia1");
 
         tipSal = TDAO.findTipologiaById(TDAO.getLastInsertId());
 
-        ADAO.addAzienda("CESARE FIORUCCI S.P.A.", "04731980969");
+        ADAO.addAzienda("CESARE FIORUCCI S.P.A.", "23424322423");
         fiorucci = ADAO.findById(ADAO.getLastInsertId());
 
         ADAO.addAzienda("DistributoreProsciutti1 S.P.A.", "14733432456");
@@ -54,6 +54,7 @@ public class AziendaDAOTest {
 
     }
 
+
     @After
     public void tearDown(){
         ADAO.removeAzienda(fiorucci.getId());
@@ -66,15 +67,19 @@ public class AziendaDAOTest {
     }
 
     @Test
+    public void getLastInsertIdTest() {
+        Assert.assertEquals("23424322423", fiorucci.getPartitaIVA());
+    }
+
+    @Test
     public void findByPartitaIvaTest(){
-        Azienda azienda = ADAO.findByPartitaIVA("04731980969");
+        Azienda azienda = ADAO.findByPartitaIVA("23424322423");
         Assert.assertNotNull(azienda);
-        System.out.println(azienda);
-        Assert.assertEquals("04731980969", azienda.getPartitaIVA());
+        Assert.assertEquals("23424322423", azienda.getPartitaIVA());
         Assert.assertEquals("CESARE FIORUCCI S.P.A.", azienda.getNome());
         Assert.assertEquals(ingrediente1.getId(), azienda.getIdIngredientiProdotti().get(0));
         Assert.assertEquals(ingrediente2.getId(), azienda.getIdIngredientiProdotti().get(1));
-        Assert.assertFalse(azienda.getIdIngredientiDistribuiti().size() > 0);
+        Assert.assertTrue(azienda.getIdIngredientiDistribuiti().isEmpty());
 
     }
 
@@ -88,21 +93,37 @@ public class AziendaDAOTest {
         Assert.assertEquals(ingrediente1.getId(), azienda.getIdIngredientiDistribuiti().get(0));
         Assert.assertEquals(ingrediente2.getId(), azienda.getIdIngredientiDistribuiti().get(1));
 
+    }
 
-        System.out.println(azienda);
+    @Test
+    public void findAllTest() {
+        ArrayList<Azienda> aziende = ADAO.findAll();
+
+        for (Azienda azienda : aziende) {
+            Assert.assertNotNull(azienda);
+            Assert.assertNotNull(azienda.getId());
+            Assert.assertNotNull(azienda.getNome());
+            Assert.assertNotNull(azienda.getPartitaIVA());
+        }
+
+        Assert.assertEquals(fiorucci.getId(), aziende.get(1).getId());
+        Assert.assertEquals(fiorucci.getNome(), aziende.get(1).getNome());
+        Assert.assertEquals(fiorucci.getPartitaIVA(), aziende.get(1).getPartitaIVA());
+
+        Assert.assertEquals(distributoreProsciutti1.getId(), aziende.get(0).getId());
+        Assert.assertEquals(distributoreProsciutti1.getNome(), aziende.get(0).getNome());
+        Assert.assertEquals(distributoreProsciutti1.getPartitaIVA(), aziende.get(0).getPartitaIVA());
+
+
     }
 
     @Test
     public void loadProducedIngredientiTest() {
         List<Integer> ingredienti = ADAO.loadProducedIngredienti(fiorucci.getId());
         Assert.assertNotNull(ingredienti);
-        Assert.assertTrue(ingredienti.size() > 0);
+        Assert.assertFalse(ingredienti.isEmpty());
         Assert.assertEquals(ingrediente1.getId(), ingredienti.get(0));
         Assert.assertEquals(ingrediente2.getId(), ingredienti.get(1));
-
-        for(Integer i : ingredienti){
-            System.out.println(IDAO.findIngredienteById(i));
-        }
 
     }
 
@@ -110,14 +131,9 @@ public class AziendaDAOTest {
     public void loadDistributedIngredientiTest() {
         List<Integer> ingredienti = ADAO.loadDistributedIngredienti(distributoreProsciutti1.getId());
         Assert.assertNotNull(ingredienti);
-        Assert.assertTrue(ingredienti.size() > 0);
+        Assert.assertFalse(ingredienti.isEmpty());
         Assert.assertEquals(ingrediente1.getId(), ingredienti.get(0));
         Assert.assertEquals(ingrediente2.getId(), ingredienti.get(1));
-
-
-        for(Integer i : ingredienti){
-            System.out.println(IDAO.findIngredienteById(i));
-        }
 
     }
 
@@ -128,10 +144,22 @@ public class AziendaDAOTest {
         Assert.assertNotNull(distributoreProsciutti2);
         Assert.assertEquals("28733432423", distributoreProsciutti2.getPartitaIVA());
         Assert.assertEquals("DistributoreProsciutti2 S.P.A.", distributoreProsciutti2.getNome());
-        System.out.println(distributoreProsciutti2);
         ADAO.removeAzienda(distributoreProsciutti2.getId());
 
     }
+
+    @Test
+    public void updateAziendaTest() {
+        Assert.assertTrue(ADAO.updateAzienda(fiorucci.getId(), "FiorucciSPA", "30948232"));
+        Azienda newFiorucci = ADAO.findById(fiorucci.getId());
+
+        Assert.assertEquals("FiorucciSPA", newFiorucci.getNome());
+        Assert.assertEquals("30948232", newFiorucci.getPartitaIVA());
+
+
+    }
+
+
 
     @Test
     public void removeAziendaTest() {

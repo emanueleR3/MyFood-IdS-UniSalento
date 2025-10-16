@@ -4,7 +4,7 @@ import it.unisalento.myfood.Business.AbstractFactory.IResultFactory;
 import it.unisalento.myfood.Business.AbstractFactory.ResultFactory;
 import it.unisalento.myfood.DAO.CarrelloDAO;
 import it.unisalento.myfood.model.Carrello;
-import it.unisalento.myfood.model.OperationCarrelloResult;
+import it.unisalento.myfood.model.Result.OperationCarrelloResult;
 
 public class LoadCarrello implements ICartOperation{
     private Integer idUtente;

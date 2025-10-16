@@ -19,17 +19,6 @@ public class ListaArticoliTableModel extends AbstractTableModel {
         return false;    // tutte le celle sono editabili così
     }
 
-    @Override
-    public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
-
-        //TODO
-
-       /* switch (columnIndex) {
-            case 3: p.setPrezzo(Float.valueOf(aValue.toString()));  //mettere try - catch NumberFormatException
-                                                                    // mettere fino alla seconda decimale
-        }*/
-    }
-
     @Override   // per modificare le intestazioni delle colonne
     public String getColumnName(int column) {
         return columnNames[column];

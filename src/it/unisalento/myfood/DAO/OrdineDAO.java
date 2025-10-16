@@ -69,8 +69,7 @@ public class OrdineDAO implements IOrdineDAO{
                 ordine.setTotale(rs.getFloat("importo"));
                 ordine.setStato(Ordine.STATO.valueOf((rs.getString("stato"))));
                 ordine.setRicorrente(rs.getInt("ricorrente") == 1);
-                Integer idCliente = rs.getInt("Cliente_Utente_idUtente");
-                ordine.setCliente(UtenteDAO.getInstance().findById(idCliente));
+                ordine.setIdCliente(rs.getInt("Cliente_Utente_idUtente"));
 
                 return ordine;
              }
@@ -81,9 +80,6 @@ public class OrdineDAO implements IOrdineDAO{
         } catch (NullPointerException e){
             System.out.println("Non ho trovato l'utente con id = " + id);
         }
-        /* finally {
-            conn.close();   //TODO: forse conviene chiuderla dopo la connessione quando viene chiusa l'app
-        }*/
 
         return null;
     }
@@ -94,7 +90,7 @@ public class OrdineDAO implements IOrdineDAO{
         ArrayList<Ordine> ordini = new ArrayList<>();
 
         DbOperationExecutor executor = new DbOperationExecutor();
-        String sql = "SELECT idOrdine FROM Ordine WHERE stato = '" + stato + "';";  // stiamo concatenando NON una String ma un tipo STATO, non so se funziona, è da testare
+        String sql = "SELECT idOrdine FROM Ordine WHERE stato = '" + stato + "';";
         IDbOperation readOp = new ReadOperation(sql);
         rs = executor.executeOperation(readOp).getResultSet();
 
@@ -113,12 +109,37 @@ public class OrdineDAO implements IOrdineDAO{
     }
 
     @Override
+    public ArrayList<Ordine> findAll() {
+        ResultSet rs;
+        ArrayList<Ordine> ordini = new ArrayList<>();
+
+        DbOperationExecutor executor = new DbOperationExecutor();
+        String sql = "SELECT idOrdine FROM Ordine";
+        IDbOperation readOp = new ReadOperation(sql);
+        rs = executor.executeOperation(readOp).getResultSet();
+
+        try{
+            while(rs.next()){
+                ordini.add(findById(rs.getInt("idOrdine")));
+            }
+
+            return ordini;
+        } catch (SQLException e){
+            System.out.println("SQL Exception " + e.getMessage());
+            System.out.println("SQL State" + e.getSQLState());
+            System.out.println("Vendor error " + e.getErrorCode());
+        }
+        return null;
+
+    }
+
+    @Override
     public ArrayList<Ordine> findByRecurrent(Integer idCliente) {
         ResultSet rs;
         ArrayList<Ordine> ordini = new ArrayList<>();
 
         DbOperationExecutor executor = new DbOperationExecutor();
-        String sql = "SELECT idOrdine FROM Ordine WHERE Cliente_Utente_idUtente = " + idCliente + " AND ricorrente = 1;";
+        String sql = "SELECT idOrdine FROM Ordine WHERE Cliente_Utente_idUtente = " + idCliente + " AND ricorrente = 1 ORDER BY idOrdine DESC;";
         IDbOperation readOp = new ReadOperation(sql);
         rs = executor.executeOperation(readOp).getResultSet();
 
@@ -148,7 +169,7 @@ public class OrdineDAO implements IOrdineDAO{
 
         // Prende la data dal sistema quando viene invocato il metodo
         LocalDateTime localDateTime = LocalDateTime.now();
-        Timestamp timestampLocalDateTime = Timestamp.valueOf(localDateTime);    // dovrebbe essere il tipo giusto per SQL
+        Timestamp timestampLocalDateTime = Timestamp.valueOf(localDateTime);
 
         // Inserisce i dati in Ordine
         String sql = "INSERT INTO Ordine (Cliente_Utente_idUtente, data, importo, stato, ricorrente) " +
@@ -198,7 +219,31 @@ public class OrdineDAO implements IOrdineDAO{
         ArrayList<Ordine> ordini = new ArrayList<>();
 
         DbOperationExecutor executor = new DbOperationExecutor();
-        String sql = "SELECT idOrdine FROM Ordine WHERE Cliente_Utente_idUtente = '" + idCliente + "';";
+        String sql = "SELECT idOrdine FROM Ordine WHERE Cliente_Utente_idUtente = " + idCliente + " ORDER BY idOrdine DESC;";
+        IDbOperation readOp = new ReadOperation(sql);
+        rs = executor.executeOperation(readOp).getResultSet();
+
+        try{
+            while(rs.next()){
+                ordini.add(findById(rs.getInt("idOrdine")));
+            }
+
+            return ordini;
+        } catch (SQLException e){
+            System.out.println("SQL Exception " + e.getMessage());
+            System.out.println("SQL State" + e.getSQLState());
+            System.out.println("Vendor error " + e.getErrorCode());
+        }
+        return null;
+    }
+
+    @Override
+    public ArrayList<Ordine> findByClienteAndState(Integer idCliente, IOrdine.STATO stato) {
+        ResultSet rs;
+        ArrayList<Ordine> ordini = new ArrayList<>();
+
+        DbOperationExecutor executor = new DbOperationExecutor();
+        String sql = "SELECT idOrdine FROM Ordine WHERE Cliente_Utente_idUtente = " + idCliente + " AND stato = '" + stato + "' ORDER BY idOrdine DESC;";
         IDbOperation readOp = new ReadOperation(sql);
         rs = executor.executeOperation(readOp).getResultSet();
 
@@ -274,5 +319,17 @@ public class OrdineDAO implements IOrdineDAO{
         rowsAffected += executor.executeOperation(writeOp).getRowsAffected();
 
         return rowsAffected == ordine.getArticoli().size() + 1;
+    }
+
+    @Override
+    public boolean updateOrdine(Ordine o) {
+        String sql = "UPDATE Ordine SET Cliente_Utente_idUtente = " + o.getIdCliente() + ", data = '" + o.getData() + "', importo = " + o.getImporto() + ", stato = '" + o.getStato() + "', ricorrente = " + (o.isRicorrente() ? 1 : 0) + " " +
+                "WHERE idOrdine = " + o.getIdOrdine() + ";";
+
+        DbOperationExecutor executor = new DbOperationExecutor();
+        IDbOperation writeOp = new WriteOperation(sql);
+        int rowsAffected = executor.executeOperation(writeOp).getRowsAffected();
+
+        return rowsAffected == 1;
     }
 }

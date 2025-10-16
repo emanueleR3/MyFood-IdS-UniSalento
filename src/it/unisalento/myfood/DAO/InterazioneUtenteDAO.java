@@ -19,7 +19,8 @@ public class InterazioneUtenteDAO implements IInterazioneUtenteDAO {
 
     private static InterazioneUtenteDAO instance = new InterazioneUtenteDAO();
 
-    private IUtenteDAO UDAO = UtenteDAO.getInstance();  //TODO: l'alternativa è tenere solo l'id nel model e modificare mezza classe
+    private IUtenteDAO UDAO = UtenteDAO.getInstance();
+
     private InterazioneUtenteDAO(){
     }
 
@@ -107,6 +108,38 @@ public class InterazioneUtenteDAO implements IInterazioneUtenteDAO {
     }
 
     @Override
+    public RispostaAmministratore findRispostaById(Integer idRisposta) {
+        String sql = "SELECT * FROM Risposta WHERE idRisposta = " + idRisposta;
+
+        DbOperationExecutor executor = new DbOperationExecutor();
+        IDbOperation readOp = new ReadOperation(sql);
+        ResultSet rs = executor.executeOperation(readOp).getResultSet();
+        RispostaAmministratore rispostaAmministratore = null;
+        try {
+            if (rs.next()) {
+                rispostaAmministratore = new RispostaAmministratore();
+                rispostaAmministratore.setIdRiposta(rs.getInt("idRisposta"));
+                rispostaAmministratore.setTesto(rs.getString("testo"));
+                rispostaAmministratore.setDataEOra(rs.getTimestamp("dataEOra"));
+                Utente admin = UtenteDAO.getInstance().findById(rs.getInt("Amministratore_Utente_idUtente"));
+                rispostaAmministratore.setAmministratore(admin);
+                CommentoCliente commentoCliente = findCommentoById(rs.getInt("Commento_idCommento"));
+                rispostaAmministratore.setCommentoRisposto(commentoCliente);
+            }
+            return rispostaAmministratore;
+
+        } catch (SQLException e) {
+            System.out.println("SQL Exception: " + e.getMessage());
+            System.out.println("SQL State: " + e.getSQLState());
+            System.out.println("Vendor Error: " + e.getErrorCode());
+        } catch (NullPointerException e) {
+            System.out.println("Non trovo nessun commento con questo id");
+        }
+
+        return null;
+    }
+
+    @Override
     public ArrayList<CommentoCliente> findCommentiNotAnswered() {
         ArrayList<CommentoCliente> commenti = new ArrayList<>();
         String sql = "SELECT idCommento " +
@@ -133,9 +166,9 @@ public class InterazioneUtenteDAO implements IInterazioneUtenteDAO {
     }
 
     @Override
-    public ArrayList<CommentoCliente> findLastCommenti() {
+    public ArrayList<CommentoCliente> findCommenti() {
         ArrayList<CommentoCliente> commenti = new ArrayList<>();
-        String sql = "SELECT idCommento FROM Commento ORDER BY dataEOra DESC LIMIT 30 ";
+        String sql = "SELECT idCommento FROM Commento ORDER BY dataEOra DESC ";
 
         DbOperationExecutor executor = new DbOperationExecutor();
         IDbOperation readOp = new ReadOperation(sql);
@@ -221,7 +254,7 @@ public class InterazioneUtenteDAO implements IInterazioneUtenteDAO {
     public boolean addRisposta(RispostaAmministratore risposta) {
 
         String sql = "INSERT INTO Risposta (testo, dataEOra, Amministratore_Utente_idUtente, Commento_idCommento) " +
-                "VALUES ('" + risposta.getTesto() + "', '" + risposta.getDataEOra() + "', " + risposta.getUtente().getId() + ", " + risposta.getIdCommentoRisposto() + ");";
+                "VALUES ('" + risposta.getTesto() + "', '" + risposta.getDataEOra() + "', " + risposta.getUtente().getId() + ", " + risposta.getCommentoRisposto().getId() + ");";
 
         DbOperationExecutor executor = new DbOperationExecutor();
         IDbOperation writeOp = new WriteOperation(sql);
@@ -232,26 +265,40 @@ public class InterazioneUtenteDAO implements IInterazioneUtenteDAO {
 
     @Override
     public boolean removeCommento(Integer idCommento) {
+
+        int rowsAffected  = 0;
+
+        if (removeRisposteByIdCommento(idCommento))
+            rowsAffected++;
+
         String sql = "DELETE FROM Commento WHERE idCommento = " + idCommento + ";";
 
         DbOperationExecutor executor = new DbOperationExecutor();
         IDbOperation writeOp = new WriteOperation(sql);
-        int rowsAffected = executor.executeOperation(writeOp).getRowsAffected();
+        rowsAffected += executor.executeOperation(writeOp).getRowsAffected();
 
-        if (removeRispostaByIdCommento(idCommento))
-            rowsAffected++;
 
-        return rowsAffected == 1;   // TODO CAMBIARE, SE CI SONO RISPOSTE NON ESCE TRUE
+        return rowsAffected > 0;
     }
 
     @Override
-    public boolean removeRispostaByIdCommento(Integer idCommento) {
+    public boolean removeRispostaById(Integer idRisposta) {
+        String sql = "DELETE FROM Risposta WHERE idRisposta = " + idRisposta + ";";
+
+        DbOperationExecutor executor = new DbOperationExecutor();
+        IDbOperation writeOp = new WriteOperation(sql);
+        int rowsAffected = executor.executeOperation(writeOp).getRowsAffected();
+        return rowsAffected > 0;
+    }
+
+    @Override
+    public boolean removeRisposteByIdCommento(Integer idCommento) {
         String sql = "DELETE FROM Risposta WHERE Commento_idCommento = " + idCommento + ";";
 
         DbOperationExecutor executor = new DbOperationExecutor();
         IDbOperation writeOp = new WriteOperation(sql);
         int rowsAffected = executor.executeOperation(writeOp).getRowsAffected();
-        return rowsAffected == 1;
+        return rowsAffected > 0;
     }
 
     @Override
@@ -299,7 +346,8 @@ public class InterazioneUtenteDAO implements IInterazioneUtenteDAO {
 
                     r.setAmministratore(utente);
                     r.setIdRiposta(rs.getInt("idRisposta"));
-                    r.setIdCommentoRisposto(rs.getInt("Commento_idCommento"));
+                    CommentoCliente commentoCliente = findCommentoById(rs.getInt("Commento_idCommento"));
+                    r.setCommentoRisposto(commentoCliente);
                     r.setDataEOra(rs.getTimestamp("dataEOra"));
                     r.setTesto(rs.getString("testo"));
 
@@ -318,7 +366,45 @@ public class InterazioneUtenteDAO implements IInterazioneUtenteDAO {
         return interazioni;
     }
 
-    // TODO: testare
+    @Override
+    public ArrayList<RispostaAmministratore> findRisposteByIdCommento(Integer idCommento) {
+        DbOperationExecutor executor = new DbOperationExecutor();
+
+        String sql = "SELECT * FROM Risposta WHERE Commento_idCommento = " + idCommento + ";";
+
+        IDbOperation readOp = new ReadOperation(sql);
+        ResultSet rs = executor.executeOperation(readOp).getResultSet();
+
+       ArrayList<RispostaAmministratore> risposte = new ArrayList<>();
+
+        try {
+            while(rs.next()) {
+
+                RispostaAmministratore rispostaAmministratore = new RispostaAmministratore();
+                rispostaAmministratore.setIdRiposta(rs.getInt("idRisposta"));
+                rispostaAmministratore.setTesto(rs.getString("testo"));
+                rispostaAmministratore.setDataEOra(rs.getTimestamp("dataEOra"));
+                Utente admin = UtenteDAO.getInstance().findById(rs.getInt("Amministratore_Utente_idUtente"));
+                rispostaAmministratore.setAmministratore(admin);
+                CommentoCliente commentoCliente = findCommentoById(idCommento);
+                rispostaAmministratore.setCommentoRisposto(commentoCliente);
+
+                risposte.add(rispostaAmministratore);
+            }
+            return risposte;
+
+
+        } catch (SQLException e) {
+            System.out.println("SQL Exception: " + e.getMessage());
+            System.out.println("SQL State: " + e.getSQLState());
+            System.out.println("Vendor Error: " + e.getErrorCode());
+        } catch (NullPointerException e) {
+            System.out.println("Non trovo nessuna tipologia con questo id");
+        }
+
+        return null;
+    }
+
     @Override
     public boolean commentoHasRisposta(Integer idCommento) {
         DbOperationExecutor executor = new DbOperationExecutor();
@@ -377,12 +463,42 @@ public class InterazioneUtenteDAO implements IInterazioneUtenteDAO {
     public boolean updateCommento(CommentoCliente commento, String testo, IInterazioneUtente.INDICE_GRADIMENTO indice) {
         DbOperationExecutor executor = new DbOperationExecutor();
 
-        String sql = "UPDATE Commento SET testo = '" + testo + "', indiceGradimento = '" + indice + "' " +
+        String sql = "UPDATE Commento SET testo = '" + testo + "', indiceGradimento = '" + indice + "', dataEOra = '" + commento.getDataEOra() + "', Articolo_idArticolo = " + commento.getIdArticolo() + ", Cliente_Utente_idUtente = " + commento.getUtente().getId() + " " +
                 "WHERE idCommento = " + commento.getId() + ";";
 
         IDbOperation writeOp = new WriteOperation(sql);
         int rowsAffected = executor.executeOperation(writeOp).getRowsAffected();
 
         return rowsAffected == 1;
+    }
+
+    @Override
+    public boolean updateRisposta(RispostaAmministratore iu) {
+        DbOperationExecutor executor = new DbOperationExecutor();
+
+        String sql = "UPDATE Risposta SET testo = '" + iu.getTesto() + "', dataEOra = '" + iu.getDataEOra() + "', Amministratore_Utente_idUtente = " + iu.getUtente().getId() + ", Commento_idCommento = " + iu.getCommentoRisposto().getId() + " " +
+                "WHERE idRisposta = " + iu.getId() + ";";
+
+        IDbOperation writeOp = new WriteOperation(sql);
+        int rowsAffected = executor.executeOperation(writeOp).getRowsAffected();
+
+        return rowsAffected == 1;
+    }
+
+    @Override
+    public boolean removeRispostePerAmministratore(Integer id) {
+        Utente admin = UtenteDAO.getInstance().findById(id);
+        ArrayList<IInterazioneUtente> risposte = admin.getInterazioni();
+
+        if (risposte.isEmpty())
+            return true;
+
+        boolean done = true;
+        for (IInterazioneUtente iu : risposte) {
+            Integer idCommento = ((RispostaAmministratore) iu).getCommentoRisposto().getId();
+            done = removeRisposteByIdCommento(idCommento);
+        }
+
+        return done;
     }
 }

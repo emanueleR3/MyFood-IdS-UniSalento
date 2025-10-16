@@ -1,7 +1,6 @@
 package it.unisalento.myfood.Test.DAOTest;
 
 import it.unisalento.myfood.DAO.ITipologiaProdottoDAO;
-import it.unisalento.myfood.DAO.IngredienteDAO;
 import it.unisalento.myfood.DAO.TipologiaProdottoDAO;
 import it.unisalento.myfood.model.TipologiaProdotto;
 import org.junit.After;
@@ -19,10 +18,10 @@ public class TipologiaProdottoDAOTest {
 
     @Before
     public void setUp(){
-        TDAO.addTipologia("Panini");
-        panTip = TDAO.findTipologiaByName("Panini");
-        TDAO.addTipologia("Bevande");
-        bevTip = TDAO.findTipologiaByName("Bevande");
+        TDAO.addTipologia("Tipologia1");
+        panTip = TDAO.findTipologiaByName("Tipologia1");
+        TDAO.addTipologia("Tipologia2");
+        bevTip = TDAO.findTipologiaByName("Tipologia2");
 
     }
 
@@ -32,7 +31,6 @@ public class TipologiaProdottoDAOTest {
         TDAO.removeTipologia(bevTip.getId());
     }
 
-
     @Test
     public void loadTipologiaTest(){
         ArrayList<TipologiaProdotto> tipologie = TDAO.loadTipologia();
@@ -40,14 +38,10 @@ public class TipologiaProdottoDAOTest {
         Assert.assertNotNull(tipologie);
         Assert.assertEquals(2,  tipologie.size());
         Assert.assertNotNull(tipologie.get(0));
-        Assert.assertEquals("Bevande", tipologie.get(0).getNome());
+        Assert.assertEquals("Tipologia2", tipologie.get(1).getNome());
         Assert.assertNotNull(tipologie.get(1));
-        Assert.assertEquals("Panini", tipologie.get(1).getNome());
+        Assert.assertEquals("Tipologia1", tipologie.get(0).getNome());
 
-
-        for(TipologiaProdotto t : tipologie){
-            System.out.println(t);
-        }
 
     }
 
@@ -56,38 +50,36 @@ public class TipologiaProdottoDAOTest {
         TipologiaProdotto tipologiaProdotto = TDAO.findTipologiaById(bevTip.getId());
         Assert.assertNotNull(tipologiaProdotto);
         Assert.assertEquals(bevTip.getId(), tipologiaProdotto.getId());
-        System.out.println(tipologiaProdotto);
 
     }
 
     @Test
     public void findTipologiaByNameTest() {
-        TipologiaProdotto tipologiaProdotto = TDAO.findTipologiaByName("Bevande");
+        TipologiaProdotto tipologiaProdotto = TDAO.findTipologiaByName("Tipologia2");
         Assert.assertNotNull(tipologiaProdotto);
         Assert.assertEquals(bevTip.getId(), tipologiaProdotto.getId());
-        System.out.println(tipologiaProdotto);
+        
     }
 
     @Test
     public void addTipologiaTest() {
-        Assert.assertTrue(TDAO.addTipologia("Patatine"));
-        TipologiaProdotto tipologiaProdotto = TDAO.findTipologiaByName("Patatine");
+        Assert.assertTrue(TDAO.addTipologia("Tipologia3"));
+        TipologiaProdotto tipologiaProdotto = TDAO.findTipologiaByName("Tipologia3");
         Assert.assertNotNull(tipologiaProdotto);
-        Assert.assertEquals("Patatine", tipologiaProdotto.getNome());
-        System.out.println(tipologiaProdotto);
+        Assert.assertEquals("Tipologia3", tipologiaProdotto.getNome());
+        
 
         TDAO.removeTipologia(tipologiaProdotto.getId());
     }
 
     @Test
     public void editTipologiaTest() {
-        TDAO.editTipologia(bevTip.getId(), "BevAnalcoliche");
+        TDAO.editTipologia(bevTip.getId(), "Tipologia4");
         TipologiaProdotto tipologiaProdotto = TDAO.findTipologiaById(bevTip.getId());
         Assert.assertNotNull(tipologiaProdotto);
-        Assert.assertEquals("BevAnalcoliche", tipologiaProdotto.getNome());
-        System.out.println(tipologiaProdotto);
+        Assert.assertEquals("Tipologia4", tipologiaProdotto.getNome());
 
-        TDAO.editTipologia(bevTip.getId(), "Bevande"); //se non si fa il teardown non trova la tipologia "Bevande" da rimuovere
+        TDAO.editTipologia(bevTip.getId(), "Tipologia2"); //se si fa il teardown non trova la tipologia "Tipologia2" da rimuovere
     }
 
 
@@ -95,8 +87,7 @@ public class TipologiaProdottoDAOTest {
     @Test
     public void removeTipologiaTest() {
         Assert.assertTrue(TDAO.removeTipologia(bevTip.getId()));
-        Assert.assertNull(TDAO.findTipologiaByName("Bevande"));
-        TDAO.addTipologia("Bevande");
+        Assert.assertNull(TDAO.findTipologiaByName("Tipologia2"));
     }
 
 }

@@ -6,10 +6,9 @@ import java.util.HashMap;
 public class Ordine implements IOrdine {
 
     private Integer idOrdine;
-    private Utente cliente;
+    private Integer idCliente;
 
     private HashMap<Integer, Integer> articoli;     //HashMap<Key, Value> che nel nostro caso è HashMap<IArticolo.getId(), quantità>
-    // TODO: Va istanziato = new HasMap()?
 
     private Float totale;
     private STATO stato;
@@ -28,10 +27,6 @@ public class Ordine implements IOrdine {
         this.articoli = articoli;
     }
 
-    public Utente getCliente() {
-        return cliente;
-    }
-
     public boolean isRicorrente() {
         return ricorrente;
     }
@@ -44,8 +39,13 @@ public class Ordine implements IOrdine {
         this.idOrdine = idOrdine;
     }
 
-    public void setCliente(Utente cliente) {
-        this.cliente = cliente;
+
+    public Integer getIdCliente() {
+        return idCliente;
+    }
+
+    public void setIdCliente(Integer idCliente) {
+        this.idCliente = idCliente;
     }
 
     public void setRicorrente(boolean ricorrente) {
@@ -76,7 +76,7 @@ public class Ordine implements IOrdine {
     public String toString() {
         return "Ordine{" +
                 "idOrdine=" + idOrdine +
-                ", cliente=" + cliente +
+                ", idCliente=" + idCliente +
                 ", articoli=" + articoli +
                 ", totale=" + totale +
                 ", stato=" + stato +

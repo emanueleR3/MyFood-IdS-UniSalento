@@ -1,6 +1,8 @@
 package it.unisalento.myfood.Business.Bridge;
 
+import java.util.ArrayList;
+
 public interface PdfAPI {
 
-    void createPdf(String text, String outfile);
+    void createPdf(ArrayList<String> lines, String outfile);
 }
